@@ -376,7 +376,8 @@ let private channels =
       Lievrefr
       Lebelius
       Enemy
-      Desmond ]
+      Desmond
+      Madelinqa ]
 
 let private readerWriter (bot: Bot) =
     match bot with
