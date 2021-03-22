@@ -15,12 +15,6 @@ let (|APIBearerToken|) value =
     match value with
     | BotSettings.APIBearerToken -> APIBearerToken("APIBearerToken")
 
-//let (|ResolveChannelUnion|) (channel: Channels) =
-//    match channel with
-//    | Reflyq -> "reflyq"
-//    | Newrite -> "newr1te"
-//    | Kotik -> "xartasovplay"
-
 let (|ResolveChannelString|) (channel: string) =
     match channel with
     | "reflyq" -> Some(Reflyq)
@@ -33,6 +27,7 @@ let (|ResolveChannelString|) (channel: string) =
     | "lebelius" -> Some(Lebelius)
     | "enemycbc" -> Some(Enemy)
     | "lievrefru" -> Some(Lievrefr)
+    | "madelineqt" -> Some(Madelinqa)
     | _ -> None
 
 let resolveUser (roomID: string) (user: User) =
@@ -48,10 +43,6 @@ let resolveUser (roomID: string) (user: User) =
         VIP
     else
         Unsubscriber
-
-//let resolveChannelUnion (channel: Channels) =
-//    match channel with
-//    | ResolveChannelUnion name -> name
 
 let resolveChannelString (channel: string) =
     match channel with

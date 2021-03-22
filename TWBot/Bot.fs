@@ -1,7 +1,5 @@
 ﻿module TWBot.Bot
 
-open System.Collections.Generic
-open System.Threading.Channels
 open TWBot
 
 open System

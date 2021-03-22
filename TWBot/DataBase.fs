@@ -1,6 +1,5 @@
 ﻿module TWBot.DataBase
 
-open ActivePatterns
 open TypesDefinition
 open System.Data.SQLite
 

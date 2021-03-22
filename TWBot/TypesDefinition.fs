@@ -33,6 +33,7 @@ type Channels =
     | Enemy
     | Lievrefr
     | Cryo
+    | Madelinqa
     member self.String =
         match self with
         | Reflyq -> "reflyq"
@@ -46,6 +47,7 @@ type Channels =
         | Enemy -> "enemycbc"
         | Lievrefr -> "lievrefru"
         | Cryo -> "cryo_0"
+        | Madelinqa -> "madelineqt"
 
 type StatusUser =
     | Broadcaster

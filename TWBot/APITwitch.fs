@@ -5,7 +5,6 @@ open FSharp.Data
 open FSharp.Json
 open DataBase
 open TokensData
-open ActivePatterns
 open TypesDefinition
 
 let deserializeRespons<'a> respons =
@@ -157,7 +156,7 @@ let checkOnline channel =
             true
         else
             false
-    | Error (err) -> false
+    | Error (_) -> false
 
 let private getAccessToken () =
     Logger.Log.StartTrace(sprintf "Start getAccessToken api request", Logger.LogLevel.Information)
