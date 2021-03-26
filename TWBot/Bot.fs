@@ -9,7 +9,9 @@ open DataBase
 
 
 module Cache =
-
+    
+    let mutable tempReflyqMessageCounter = 0
+    
     let mutable cacheLovers : CacheLove array = Array.empty
     let mutable cacheCutDown : CacheCatDown array = Array.empty
 
@@ -1564,6 +1566,7 @@ let handleChat (readerWriter: ReaderWriter) =
     |> handleLine
     |> function
     | Ok (msgr) ->
+        if msgr.Channel = Reflyq then Cache.tempReflyqMessageCounter <- Cache.tempReflyqMessageCounter + 1
         Cache.handleCache msgr readerWriter
         handleMasterCommands msgr readerWriter
 
