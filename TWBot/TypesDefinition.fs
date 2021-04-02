@@ -1,5 +1,6 @@
 ﻿module TWBot.TypesDefinition
 
+
 //Типы в основном под базу данных
 type ChannelSettings =
     | Prefix
@@ -48,6 +49,21 @@ type Channels =
         | Lievrefr -> "lievrefru"
         | Cryo -> "cryo_0"
         | Madelinqa -> "madelineqt"
+        
+module Channels =
+    let ToList =
+        [ Reflyq
+          Newrite
+          Kotik
+          XandrSH
+          Markus
+          Felicia
+          Desmond
+          Lebelius
+          Enemy
+          Lievrefr
+          Cryo
+          Madelinqa ]
 
 type StatusUser =
     | Broadcaster

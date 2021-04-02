@@ -262,6 +262,8 @@ module Cache =
 
 
 module Utils =
+    
+    let minute = 1000*60
 
     let startTime = DateTime.Now
 
@@ -367,19 +369,7 @@ module Utils =
 let private caps =
     @"CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands"
 
-let private channels =
-    [ Reflyq
-      Newrite
-      Kotik
-      Markus
-      XandrSH
-      Felicia
-      Cryo
-      Lievrefr
-      Lebelius
-      Enemy
-      Desmond
-      Madelinqa ]
+let private channels = Channels.ToList
 
 let private readerWriter (bot: Bot) =
     match bot with
