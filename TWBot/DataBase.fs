@@ -319,16 +319,16 @@ type SingleData private () =
                     Logger.Log.TraceInf
                     <| sprintf
                         "Command %s for channel %s successful created Code%s"
-                           command.chCommand
-                           channel.String
-                           (string code)
+                        command.chCommand
+                        channel.String
+                        (string code)
 
                     Ok
                     <| sprintf
                         "Command %s for channel %s successful created Code%s"
-                           command.chCommand
-                           channel.String
-                           (string code)
+                        command.chCommand
+                        channel.String
+                        (string code)
                 with :? SQLiteException as eX ->
                     Logger.Log.TraceErr
                     <| sprintf "createChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
@@ -378,16 +378,16 @@ type SingleData private () =
                     Logger.Log.TraceInf
                     <| sprintf
                         "Command %s for channel %s successful delete Code%s"
-                           command.chCommand
-                           channel.String
-                           (string code)
+                        command.chCommand
+                        channel.String
+                        (string code)
 
                     Ok
                     <| sprintf
                         "Command %s for channel %s successful delete Code%s"
-                           command.chCommand
-                           channel.String
-                           (string code)
+                        command.chCommand
+                        channel.String
+                        (string code)
                 with :? SQLiteException as eX ->
 
                     Logger.Log.TraceErr
@@ -442,16 +442,16 @@ type SingleData private () =
                     Logger.Log.TraceInf
                     <| sprintf
                         "Command %s for channel %s successful update Code%s"
-                           command.chCommand
-                           channel.String
-                           (string code)
+                        command.chCommand
+                        channel.String
+                        (string code)
 
                     Ok
                     <| sprintf
                         "Command %s for channel %s successful update Code%s"
-                           command.chCommand
-                           channel.String
-                           (string code)
+                        command.chCommand
+                        channel.String
+                        (string code)
                 with :? SQLiteException as eX ->
 
                     Logger.Log.TraceErr
@@ -500,30 +500,30 @@ type SingleData private () =
                     Logger.Log.TraceWarn
                     <| sprintf
                         "ChannelSetting %s for %s channel not found Code%s"
-                           settingName
-                           channel.String
-                           (string resp)
+                        settingName
+                        channel.String
+                        (string resp)
 
                     Ok
                     <| sprintf
                         "ChannelSetting %s for %s channel not found Code%s"
-                           settingName
-                           channel.String
-                           (string resp)
+                        settingName
+                        channel.String
+                        (string resp)
                 else
                     Logger.Log.TraceInf
                     <| sprintf
                         "ChannelSetting %s for %s channel successful updated Code%s"
-                           settingName
-                           channel.String
-                           (string resp)
+                        settingName
+                        channel.String
+                        (string resp)
 
                     Ok
                     <| sprintf
                         "ChannelSetting %s for %s channel successful updated Code%s"
-                           settingName
-                           channel.String
-                           (string resp)
+                        settingName
+                        channel.String
+                        (string resp)
             with :? SQLiteException as eX ->
 
                 Logger.Log.TraceErr

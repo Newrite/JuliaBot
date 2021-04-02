@@ -49,9 +49,9 @@ type Log() =
             [<CallerFilePath; Optional; DefaultParameterValue("")>] path: string,
             [<CallerLineNumber; Optional; DefaultParameterValue(0)>] line: int
         ) =
-        
+
         let logLevel = LogLevel.Warning
-        
+
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
@@ -63,51 +63,51 @@ type Log() =
             [<CallerFilePath; Optional; DefaultParameterValue("")>] path: string,
             [<CallerLineNumber; Optional; DefaultParameterValue(0)>] line: int
         ) =
-        
+
         let logLevel = LogLevel.Error
-        
+
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
         Log.WritePrint logLevel finalMessage
-        
+
     static member TraceExc
         (
             message: string,
             [<CallerFilePath; Optional; DefaultParameterValue("")>] path: string,
             [<CallerLineNumber; Optional; DefaultParameterValue(0)>] line: int
         ) =
-        
+
         let logLevel = LogLevel.Exception
-        
+
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
         Log.WritePrint logLevel finalMessage
-        
+
     static member TraceInf
         (
             message: string,
             [<CallerFilePath; Optional; DefaultParameterValue("")>] path: string,
             [<CallerLineNumber; Optional; DefaultParameterValue(0)>] line: int
         ) =
-        
+
         let logLevel = LogLevel.Information
-        
+
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
         Log.WritePrint logLevel finalMessage
-        
+
     static member TraceDeb
         (
             message: string,
             [<CallerFilePath; Optional; DefaultParameterValue("")>] path: string,
             [<CallerLineNumber; Optional; DefaultParameterValue(0)>] line: int
         ) =
-        
+
         let logLevel = LogLevel.Debug
-        
+
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 

@@ -9,9 +9,9 @@ open DataBase
 
 
 module Cache =
-    
+
     let mutable tempReflyqMessageCounter = 0
-    
+
     let mutable cacheLovers : CacheLove array = Array.empty
     let mutable cacheCutDown : CacheCatDown array = Array.empty
 
@@ -62,7 +62,9 @@ module Cache =
         SingleData.DB.getCommands channel
         |> function
         | Ok (commands) ->
-            Logger.Log.TraceDeb <| sprintf "List of commands for %s - %A" channel.String commands
+            Logger.Log.TraceDeb
+            <| sprintf "List of commands for %s - %A" channel.String commands
+
             cacheChannelCommands <- Array.append cacheChannelCommands [| { ListCMD = (channel, commands) } |]
         | Error (_) -> ()
 
@@ -225,22 +227,20 @@ module Cache =
         elif cutDown.WhoKill = cutDown.WhoKilled then
             cacheCutDown <- Array.append cacheCutDown [| cutDown |]
 
-
-
-
-
     let addCacheCatDownReward (cutDownReward: CacheCatDownReward) =
         if not (checkCacheCatDownRewardKilled cutDownReward.WhoKilled cutDownReward.Channel) then
             cacheCutDownReward <- Array.append cacheCutDownReward [| cutDownReward |]
 
-
     let resolveCommandCache (msgr: MessageRead) cmd =
-        Logger.Log.TraceInf <| sprintf "Start resolve CommandCache "
+        Logger.Log.TraceInf
+        <| sprintf "Start resolve CommandCache "
 
         Array.tryFind (fun (elem: CacheChannelCommands) -> msgr.Channel = (fst elem.ListCMD)) cacheChannelCommands
         |> function
         | Some (list) ->
-            Logger.Log.TraceInf <| sprintf "Get list of commands "
+            Logger.Log.TraceInf
+            <| sprintf "Get list of commands "
+
             List.tryFind (fun (elem: ChannelCommand) -> elem.chCommand = cmd) (snd list.ListCMD)
         | None -> None
 
@@ -254,16 +254,20 @@ module Cache =
                 | None -> false)
             cacheUsers
 
-    let handleCache msgr rw =
-        handleCacheLove ()
-        handleCacheUsers msgr
-        handleCacheCatDown ()
-        handleCacheCatDownReward rw
+    let rec initCache (channelsList: Channels list) listSize =
+        if listSize - 1 < 0 then
+            ()
+        else
+            let currentSize = listSize - 1
+            let channel = List.item currentSize channelsList
+            updateCacheChannelSettings channel
+            addCacheChannelCommands channel
+            initCache channelsList currentSize
 
 
-module Utils =
-    
-    let minute = 1000*60
+module private Utils =
+
+    let minute = 1000 * 60
 
     let startTime = DateTime.Now
 
@@ -327,7 +331,7 @@ module Utils =
                     ok
             | None -> None
 
-        APITwitch.getChatters msgr.Channel
+        APITwitch.Requests.getChatters msgr.Channel
         |> APITwitch.deserializeRespons<Chat>
         |> function
         | Ok (chat) ->
@@ -365,97 +369,7 @@ module Utils =
             | Some (status) -> (status, nickname)
             | None -> (NotFound, None)
 
-[<Literal>]
-let private caps =
-    @"CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands"
-
-let private channels = Channels.ToList
-
-let private readerWriter (bot: Bot) =
-    match bot with
-    | Bot (tcp) ->
-        { Reader = new System.IO.StreamReader(tcp.GetStream())
-          Writer = new System.IO.StreamWriter(tcp.GetStream()) }
-
-
-let sendMessage (msg: MessageWrite) =
-
-    if msg.Message.Length >= 1 then
-
-        printfn "%s"
-        <| sprintf "%s %s" msg.Message msg.Channel.String
-
-        sprintf "PRIVMSG #%s :%s\n\r" msg.Channel.String msg.Message
-        |> msg.Writer.WriteLine
-
-        msg.Writer.Flush()
-
-    ()
-
-let sendRaw (rw: ReaderWriter) (raw: string) =
-    if raw.Length >= 1 then
-        raw |> printfn "%s"
-        rw.Writer.WriteLine(raw)
-        rw.Writer.Flush()
-
-    ()
-
-let readChat (rw: ReaderWriter) =
-    let msg = rw.Reader.ReadLine()
-
-    if msg.Contains("PING :tmi.twitch.tv") then
-        printfn "%s" <| "PONG :tmi.twitch.tv"
-        sendRaw rw "PONG :tmi.twitch.tv"
-        msg
-    else
-        msg
-
-let private initDBChannel (channel: Channels) =
-    SingleData.DB.createChannelSettingsTable channel
-    |> printfn "createChannelSettingsTable %A"
-
-    SingleData.DB.createChannelCommandsTable channel
-    |> printfn "createChannelCommandsTable %A"
-
-let private initDBBot () =
-    SingleData.DB.createBotSettingsTable ()
-    |> printfn "%A"
-
-    APITwitch.updateAccessToken () |> printfn "%A"
-
-let private joinChannels (rw: ReaderWriter) (channelsList: Channels list) =
-    let rec joinChannel listSize =
-        if listSize - 1 < 0 then
-            ()
-        else
-            let currentSize = listSize - 1
-            let channel = List.item currentSize channelsList
-            initDBChannel channel |> printfn "%A"
-            Cache.updateCacheChannelSettings channel
-            Cache.addCacheChannelCommands channel
-
-            channel.String
-            |> sprintf "JOIN #%s\n\r"
-            |> sendRaw rw
-
-            joinChannel currentSize
-
-    joinChannel channelsList.Length
-
-let connection (bot: Bot) =
-    initDBBot ()
-
-    match bot with
-    | Bot (tcp) ->
-        tcp.Connect("irc.chat.twitch.tv", 6667)
-        let rw = readerWriter (bot)
-        sendRaw rw (sprintf "PASS %s\n\r" TokensData.OAuth)
-        sendRaw rw (sprintf "NICK %s\n\r" TokensData.Nickname)
-        sendRaw rw (sprintf "%s\n\r" caps)
-        joinChannels rw channels
-        rw
-
-module Commands =
+module private Commands =
 
     let ball =
         [| "хрустальный шар куда-то закатился, попробуйте позже"
@@ -541,7 +455,7 @@ module Commands =
            "Без скелетной пехоты не взлетит." |]
 
 
-    module Reflyq =
+    module private Reflyq =
 
         [<Literal>]
         let inMuteTime = "30"
@@ -558,7 +472,9 @@ module Commands =
         module Answers =
 
             let private catDownRewardFunction rw (msgr: MessageRead) defendNickname howLongMuted =
-                sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s %s\n\r" msgr.Channel.String defendNickname howLongMuted)
+                APITwitch.IRC.sendRaw
+                    rw
+                    (sprintf "PRIVMSG #%s :/timeout %s %s\n\r" msgr.Channel.String defendNickname howLongMuted)
 
                 Cache.addCacheCatDownReward
                     { TimeWhen = Utils.Time()
@@ -567,7 +483,9 @@ module Commands =
                       WhoKilled = defendNickname }
 
             let private catDownFunction rw (msgr: MessageRead) defendNickname killer howLongMuted howLongCantUse =
-                sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s %s\n\r" msgr.Channel.String defendNickname howLongMuted)
+                APITwitch.IRC.sendRaw
+                    rw
+                    (sprintf "PRIVMSG #%s :/timeout %s %s\n\r" msgr.Channel.String defendNickname howLongMuted)
 
                 Cache.addCacheCatDown
                     { TimeWhen = Utils.Time()
@@ -743,7 +661,7 @@ module Commands =
 
         let catDown (msgr: MessageRead) (rw: ReaderWriter) =
             if msgr.User.Name = "ifozar" then
-                sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s 300\n\r" msgr.Channel.String msgr.User.Name)
+                APITwitch.IRC.sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s 300\n\r" msgr.Channel.String msgr.User.Name)
 
                 sprintf @"%s заебал уже эту хуйню писать" msgr.User.DisplayName
             else
@@ -754,7 +672,7 @@ module Commands =
                 | Subscriber -> sprintf "Зачем ты это делаешь? roflanZachto"
                 | VIP -> sprintf "Ты ходишь по тонкому льду, випчик.. Ладно живи roflanEbalo"
                 | Unsubscriber ->
-                    sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s 120\n\r" msgr.Channel.String msgr.User.Name)
+                    APITwitch.IRC.sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s 120\n\r" msgr.Channel.String msgr.User.Name)
 
                     sprintf "Я тебя щас нахуй вырублю, ансаб блять НЫА roflanEbalo"
                 | NotFound -> sprintf "/me какая-то непонятная хрень...%s" msgr.User.Name
@@ -776,9 +694,14 @@ module Commands =
             | Some (name) ->
                 if name = msgr.User.Name then
                     match msgr.User.isSubscriber with
-                    | true -> sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s 150\n\r" msgr.Channel.String msgr.User.Name)
+                    | true ->
+                        APITwitch.IRC.sendRaw
+                            rw
+                            (sprintf "PRIVMSG #%s :/timeout %s 150\n\r" msgr.Channel.String msgr.User.Name)
                     | false ->
-                        sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s 300\n\r" msgr.Channel.String msgr.User.Name)
+                        APITwitch.IRC.sendRaw
+                            rw
+                            (sprintf "PRIVMSG #%s :/timeout %s 300\n\r" msgr.Channel.String msgr.User.Name)
 
                     sprintf "%s, я давно хотела это сделать peepoGun" msgr.User.DisplayName
                 else
@@ -819,7 +742,7 @@ module Commands =
 
         let catDownUserStart (msgr: MessageRead) rw attackUserStatus defenderUserStatus defenderNickName =
             if Cache.checkCacheCatDownKill msgr.User.Name msgr.Channel then
-                sendRaw rw
+                APITwitch.IRC.sendRaw rw
                 <| sprintf "PRIVMSG #%s :/timeout @%s 30" msgr.Channel.String msgr.User.Name
 
                 sprintf "Камень бьет ножницы, а я бью твое ебало спамер, НЫА roflanEbalo"
@@ -835,7 +758,7 @@ module Commands =
                         if defenderUserStatus = NotFound then
                             sprintf "/me достает БФГ9000, но не может найти цель %s..." defenderNickName
                         else
-                            sendRaw rw
+                            APITwitch.IRC.sendRaw rw
                             <| sprintf "PRIVMSG #%s :/timeout @%s 30" msgr.Channel.String msgr.User.Name
 
                             sprintf "/me %s произносит YOL TooR Shul и испепеляет %s monkaX" msgr.User.DisplayName name
@@ -912,8 +835,8 @@ module Commands =
         | None -> sprintf "%s ****void тоже любит тебя!" msgr.User.DisplayName
 
     let uptime (msgr: MessageRead) =
-        if APITwitch.checkOnline msgr.Channel then
-            APITwitch.getStreams msgr.Channel
+        if APITwitch.Requests.checkOnline msgr.Channel then
+            APITwitch.Requests.getStreams msgr.Channel
             |> APITwitch.deserializeRespons<GetStreams>
             |> function
             | Ok (data) ->
@@ -932,15 +855,19 @@ module Commands =
         elif msgr.User.UserID = msgr.RoomID then
             "Вызывайте дурку BloodTrail"
         elif Utils.rand 0 99 < 50 then
-            sendRaw
+            APITwitch.IRC.sendRaw
                 rw
                 (sprintf "PRIVMSG #%s :/me подносит револьвер к виску %s\n\r" msgr.Channel.String msgr.User.DisplayName)
 
             System.Threading.Thread.Sleep(2000)
-            sendRaw rw (sprintf "PRIVMSG #%s :/timeout @%s 120 рулетка\n\r" msgr.Channel.String msgr.User.Name)
+
+            APITwitch.IRC.sendRaw
+                rw
+                (sprintf "PRIVMSG #%s :/timeout @%s 120 рулетка\n\r" msgr.Channel.String msgr.User.Name)
+
             sprintf "Револьвер выстреливает! %s погибает у чатлан на руках BibleThump 7" msgr.User.DisplayName
         else
-            sendRaw
+            APITwitch.IRC.sendRaw
                 rw
                 (sprintf "PRIVMSG #%s :/me подносит револьвер к виску %s\n\r" msgr.Channel.String msgr.User.DisplayName)
 
@@ -956,7 +883,9 @@ module Commands =
             sprintf "/timeout @%s 60 харакири" msgr.User.Name
 
     let addCommandDataBase (msgr: MessageRead) =
-        Logger.Log.TraceDeb <| sprintf "addCommandDataBase %A" msgr
+        Logger.Log.TraceDeb
+        <| sprintf "addCommandDataBase %A" msgr
+
         let splited = msgr.Message.Split(' ')
 
         if (msgr.User.UserID <> msgr.RoomID)
@@ -983,7 +912,9 @@ module Commands =
                 err
 
     let deleteCommandDataBase (msgr: MessageRead) =
-        Logger.Log.TraceDeb <| sprintf "deleteCommandDataBase %A" msgr
+        Logger.Log.TraceDeb
+        <| sprintf "deleteCommandDataBase %A" msgr
+
         let splited = msgr.Message.Split(' ')
 
         if (msgr.User.UserID <> msgr.RoomID)
@@ -1005,7 +936,8 @@ module Commands =
             | None -> sprintf "Команда %s не найдена" (splited.[1].ToLower())
 
     let listCommandDataBase (msgr: MessageRead) =
-        Logger.Log.TraceDeb <| sprintf "listCommandDataBase %A" msgr
+        Logger.Log.TraceDeb
+        <| sprintf "listCommandDataBase %A" msgr
 
         SingleData.DB.getCommands msgr.Channel
         |> function
@@ -1019,7 +951,9 @@ module Commands =
         | Error (err) -> err
 
     let updateCommandDataBase (msgr: MessageRead) =
-        Logger.Log.TraceDeb <| sprintf "updateCommandDataBase %A" msgr
+        Logger.Log.TraceDeb
+        <| sprintf "updateCommandDataBase %A" msgr
+
         let splited = msgr.Message.Split(' ')
 
         if (msgr.User.UserID <> msgr.RoomID)
@@ -1048,7 +982,9 @@ module Commands =
             | None -> sprintf "Команда %s не найдена" command
 
     let updateChannelSettingDataBase (msgr: MessageRead) (rw: ReaderWriter) (setting: ChannelSettings) =
-        Logger.Log.TraceDeb <| sprintf "updateChannelSettingDataBase %A" msgr
+        Logger.Log.TraceDeb
+        <| sprintf "updateChannelSettingDataBase %A" msgr
+
         let splited = msgr.Message.Split(' ')
 
         if (msgr.User.UserID <> msgr.RoomID)
@@ -1081,9 +1017,9 @@ module Commands =
                     not <| Cache.checkToggleChannel msgr.Channel
 
                 if switch then
-                    sendRaw rw (sprintf "PRIVMSG #%s :Просыпаемся...\n\r" msgr.Channel.String)
+                    APITwitch.IRC.sendRaw rw (sprintf "PRIVMSG #%s :Просыпаемся...\n\r" msgr.Channel.String)
                 else
-                    sendRaw rw (sprintf "PRIVMSG #%s :Засыпаем...\n\r" msgr.Channel.String)
+                    APITwitch.IRC.sendRaw rw (sprintf "PRIVMSG #%s :Засыпаем...\n\r" msgr.Channel.String)
 
                 SingleData.DB.setChannelSetting
                     msgr.Channel
@@ -1100,9 +1036,9 @@ module Commands =
                     <| Cache.checkEmotionToggleChannel msgr.Channel
 
                 if switch then
-                    sendRaw rw (sprintf "PRIVMSG #%s :Снова спами эмоты!\n\r" msgr.Channel.String)
+                    APITwitch.IRC.sendRaw rw (sprintf "PRIVMSG #%s :Снова спами эмоты!\n\r" msgr.Channel.String)
                 else
-                    sendRaw rw (sprintf "PRIVMSG #%s :Отключаем эмоции.\n\r" msgr.Channel.String)
+                    APITwitch.IRC.sendRaw rw (sprintf "PRIVMSG #%s :Отключаем эмоции.\n\r" msgr.Channel.String)
 
                 SingleData.DB.setChannelSetting
                     msgr.Channel
@@ -1251,19 +1187,6 @@ module Commands =
             Command = lazy (Reflyq.rewardMute msgr rw)
             Channel = Reflyq } ]
 
-    let handleRewards (msgr: MessageRead) (rw: ReaderWriter) =
-        match msgr.RewardCode with
-        | Some (code) ->
-            List.tryFind (fun (elem: RewardList) -> code = elem.RewardCode) (rewardList msgr rw)
-            |> function
-            | Some (reward) ->
-                sendMessage
-                    { Channel = reward.Channel
-                      Message = reward.Command.Force()
-                      Writer = rw.Writer }
-            | _ -> ()
-        | _ -> ()
-
 module private Parse =
 
     let resolveCommandList (cmd: string) (msgr: MessageRead) (rw: ReaderWriter) =
@@ -1387,183 +1310,186 @@ module private Parse =
             printfn "%s" err
             None
 
-let handleLine (line: string) =
-    let lineSplit = line.Split("tmi.twitch.tv")
-
-    if lineSplit.Length < 2 then
-        Error "Длина массива меньше 2 или нет PRIVMSG"
-    elif not (line.Contains("PRIVMSG")) then
-        Error "нет PRIVMSG"
-    else
-        let firstLineSplit = lineSplit.[0].Split(";")
-        let secondLineSplit = lineSplit.[1].Split(' ')
-
-        resolveChannelString (Parse.channel secondLineSplit)
-        |> function
-        | Some (chan) ->
-
-            let usr =
-                { Name = Parse.nickname firstLineSplit
-                  DisplayName = Parse.displayName firstLineSplit
-                  isModerator = Parse.moderator firstLineSplit
-                  isSubscriber = Parse.subscriber firstLineSplit
-                  isVIP = Parse.vip firstLineSplit
-                  isTurbo = Parse.turbo firstLineSplit
-                  UserID = Parse.userID firstLineSplit }
-
-            let msg =
-                { Channel = chan
-                  RoomID = Parse.roomID firstLineSplit
-                  User = usr
-                  Message = Parse.message secondLineSplit
-                  RewardCode = Parse.rewardID firstLineSplit }
-
-            msg |> Ok
-        | None -> Error "Неизвестный канал"
-
-
-let handleCommands (msgr: MessageRead) (rw: ReaderWriter) =
-    match Parse.command msgr rw with
-    | Some (lazyCommand) ->
-        sendMessage
-            { Channel = msgr.Channel
-              Message = lazyCommand.Force().chAnswer
-              Writer = rw.Writer }
-    | None -> ()
-
-let handleReacts (msgr: MessageRead) (rw: ReaderWriter) =
-    if Cache.checkLastReactTimeChannel msgr.Channel
-       && Cache.checkEmotionToggleChannel msgr.Channel then
-        match msgr.Message with
-        | SMOrc react ->
-            Cache.updateLastReactTimeChannel msgr.Channel
-
-            sendMessage
-                { Channel = msgr.Channel
-                  Message = react
-                  Writer = rw.Writer }
-        | PogChamp react ->
-            Cache.updateLastReactTimeChannel msgr.Channel
-
-            sendMessage
-                { Channel = msgr.Channel
-                  Message = react
-                  Writer = rw.Writer }
-        | Greetings react ->
-            Cache.updateLastReactTimeChannel msgr.Channel
-
-            sendMessage
-                { Channel = msgr.Channel
-                  Message = react
-                  Writer = rw.Writer }
-        | NoReact -> ()
-    else
-        ()
-
-let handleMasterCommands (msgr: MessageRead) (rw: ReaderWriter) =
-    let splited = msgr.Message.ToLower().Split()
-
-    if splited.Length < 1 then
-        ()
-    else if splited.[0].Length > 1 then
-        Cache.checkPrefixChannel msgr.Channel
-        |> function
-        | Ok (prefix) ->
-            if string splited.[0].[0] = prefix then
-                let command = splited.[0].[1..]
-
-                match command with
-                | "setprefix" ->
-                    sendMessage
-                        { Channel = msgr.Channel
-                          Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.Prefix
-                          Writer = rw.Writer }
-                | "settoggle" ->
-                    sendMessage
-                        { Channel = msgr.Channel
-                          Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.Toggle
-                          Writer = rw.Writer }
-                | "setreactcd" ->
-                    sendMessage
-                        { Channel = msgr.Channel
-                          Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.EmotionCoolDown
-                          Writer = rw.Writer }
-                | "setreacttoggle" ->
-                    sendMessage
-                        { Channel = msgr.Channel
-                          Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.EmotionToggle
-                          Writer = rw.Writer }
-                | _ -> ()
-            else
-                ()
+module Handlers =
+    
+    let handleRewards (msgr: MessageRead) (rw: ReaderWriter) =
+        match msgr.RewardCode with
+        | Some (code) ->
+            List.tryFind (fun (elem: RewardList) -> code = elem.RewardCode) (Commands.rewardList msgr rw)
+            |> function
+            | Some (reward) ->
+                APITwitch.IRC.sendMessage
+                    { Channel = reward.Channel
+                      Message = reward.Command.Force()
+                      Writer = rw.Writer }
+            | _ -> ()
         | _ -> ()
-    else
-        ()
 
-let handleHelper (msgr: MessageRead) (rw: ReaderWriter) =
-    let splited = msgr.Message.ToLower().Split()
+    let handleLine (line: string) =
+        let lineSplit = line.Split("tmi.twitch.tv")
 
-    if splited.Length < 1 then
-        ()
-    else if splited.[0].Length > 1 then
-        Cache.checkPrefixChannel msgr.Channel
-        |> function
-        | Ok (prefix) ->
-            if string splited.[0].[0] = prefix then
-                let command = splited.[0].[1..]
+        if lineSplit.Length < 2 then
+            Error "Длина массива меньше 2 или нет PRIVMSG"
+        elif not (line.Contains("PRIVMSG")) then
+            Error "нет PRIVMSG"
+        else
+            let firstLineSplit = lineSplit.[0].Split(";")
+            let secondLineSplit = lineSplit.[1].Split(' ')
 
-                match command with
-                | "help" ->
-                    let commands = Commands.commandList msgr rw
+            resolveChannelString (Parse.channel secondLineSplit)
+            |> function
+            | Some (chan) ->
 
-                    let masterHelper =
-                        if msgr.RoomID = msgr.User.UserID then
-                            "setprefix, settoggle, setreactcd, setreacttoggle "
-                        else
-                            ""
+                let usr =
+                    { Name = Parse.nickname firstLineSplit
+                      DisplayName = Parse.displayName firstLineSplit
+                      isModerator = Parse.moderator firstLineSplit
+                      isSubscriber = Parse.subscriber firstLineSplit
+                      isVIP = Parse.vip firstLineSplit
+                      isTurbo = Parse.turbo firstLineSplit
+                      UserID = Parse.userID firstLineSplit }
 
-                    let getCommands =
-                        List.filter
-                            (fun elem ->
-                                match elem with
-                                | el when not (List.contains msgr.Channel el.Ban) ->
-                                    match el.Channel with
-                                    | All -> true
-                                    | Channel (ch) -> ch = msgr.Channel
-                                    | ChannelList (cl) -> List.contains msgr.Channel cl
-                                | _ -> false)
-                            commands
+                let msg =
+                    { Channel = chan
+                      RoomID = Parse.roomID firstLineSplit
+                      User = usr
+                      Message = Parse.message secondLineSplit
+                      RewardCode = Parse.rewardID firstLineSplit }
 
-                    sendMessage
-                        { Channel = msgr.Channel
-                          Message =
-                              "Список доступных команд: "
-                              + masterHelper
-                              + (List.collect (fun (elem: CommandList) -> [ elem.cmdName.Head ]) getCommands
-                                 |> List.reduce (fun acc elem -> acc + ", " + elem))
-                              + Commands.listCommandDataBase msgr
-                          Writer = rw.Writer }
-                | _ -> ()
-            else
-                ()
-        | _ -> ()
-    else
-        ()
+                msg |> Ok
+            | None -> Error "Неизвестный канал"
 
-let handleChat (readerWriter: ReaderWriter) =
-    readChat readerWriter
-    |> handleLine
-    |> function
-    | Ok (msgr) ->
-        if msgr.Channel = Reflyq then Cache.tempReflyqMessageCounter <- Cache.tempReflyqMessageCounter + 1
-        Cache.handleCache msgr readerWriter
-        handleMasterCommands msgr readerWriter
 
-        match Cache.checkToggleChannel msgr.Channel with
-        | true ->
-            handleHelper msgr readerWriter
-            handleReacts msgr readerWriter
-            handleCommands msgr readerWriter
-            Commands.handleRewards msgr readerWriter
-        | false -> ()
-    | Error (err) -> printfn "%s" err
+    let handleCommands (msgr: MessageRead) (rw: ReaderWriter) =
+        match Parse.command msgr rw with
+        | Some (lazyCommand) ->
+            APITwitch.IRC.sendMessage
+                { Channel = msgr.Channel
+                  Message = lazyCommand.Force().chAnswer
+                  Writer = rw.Writer }
+        | None -> ()
+
+    let handleReacts (msgr: MessageRead) (rw: ReaderWriter) =
+        if Cache.checkLastReactTimeChannel msgr.Channel
+           && Cache.checkEmotionToggleChannel msgr.Channel then
+            match msgr.Message with
+            | SMOrc react ->
+                Cache.updateLastReactTimeChannel msgr.Channel
+
+                APITwitch.IRC.sendMessage
+                    { Channel = msgr.Channel
+                      Message = react
+                      Writer = rw.Writer }
+            | PogChamp react ->
+                Cache.updateLastReactTimeChannel msgr.Channel
+
+                APITwitch.IRC.sendMessage
+                    { Channel = msgr.Channel
+                      Message = react
+                      Writer = rw.Writer }
+            | Greetings react ->
+                Cache.updateLastReactTimeChannel msgr.Channel
+
+                APITwitch.IRC.sendMessage
+                    { Channel = msgr.Channel
+                      Message = react
+                      Writer = rw.Writer }
+            | NoReact -> ()
+        else
+            ()
+
+    let handleMasterCommands (msgr: MessageRead) (rw: ReaderWriter) =
+        let splited = msgr.Message.ToLower().Split()
+
+        if splited.Length < 1 then
+            ()
+        else if splited.[0].Length > 1 then
+            Cache.checkPrefixChannel msgr.Channel
+            |> function
+            | Ok (prefix) ->
+                if string splited.[0].[0] = prefix then
+                    let command = splited.[0].[1..]
+
+                    match command with
+                    | "setprefix" ->
+                        APITwitch.IRC.sendMessage
+                            { Channel = msgr.Channel
+                              Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.Prefix
+                              Writer = rw.Writer }
+                    | "settoggle" ->
+                        APITwitch.IRC.sendMessage
+                            { Channel = msgr.Channel
+                              Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.Toggle
+                              Writer = rw.Writer }
+                    | "setreactcd" ->
+                        APITwitch.IRC.sendMessage
+                            { Channel = msgr.Channel
+                              Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.EmotionCoolDown
+                              Writer = rw.Writer }
+                    | "setreacttoggle" ->
+                        APITwitch.IRC.sendMessage
+                            { Channel = msgr.Channel
+                              Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.EmotionToggle
+                              Writer = rw.Writer }
+                    | _ -> ()
+                else
+                    ()
+            | _ -> ()
+        else
+            ()
+
+    let handleHelper (msgr: MessageRead) (rw: ReaderWriter) =
+        let splited = msgr.Message.ToLower().Split()
+
+        if splited.Length < 1 then
+            ()
+        else if splited.[0].Length > 1 then
+            Cache.checkPrefixChannel msgr.Channel
+            |> function
+            | Ok (prefix) ->
+                if string splited.[0].[0] = prefix then
+                    let command = splited.[0].[1..]
+
+                    match command with
+                    | "help" ->
+                        let commands = Commands.commandList msgr rw
+
+                        let masterHelper =
+                            if msgr.RoomID = msgr.User.UserID then
+                                "setprefix, settoggle, setreactcd, setreacttoggle "
+                            else
+                                ""
+
+                        let getCommands =
+                            List.filter
+                                (fun elem ->
+                                    match elem with
+                                    | el when not (List.contains msgr.Channel el.Ban) ->
+                                        match el.Channel with
+                                        | All -> true
+                                        | Channel (ch) -> ch = msgr.Channel
+                                        | ChannelList (cl) -> List.contains msgr.Channel cl
+                                    | _ -> false)
+                                commands
+
+                        APITwitch.IRC.sendMessage
+                            { Channel = msgr.Channel
+                              Message =
+                                  "Список доступных команд: "
+                                  + masterHelper
+                                  + (List.collect (fun (elem: CommandList) -> [ elem.cmdName.Head ]) getCommands
+                                     |> List.reduce (fun acc elem -> acc + ", " + elem))
+                                  + Commands.listCommandDataBase msgr
+                              Writer = rw.Writer }
+                    | _ -> ()
+                else
+                    ()
+            | _ -> ()
+        else
+            ()
+
+    let handleCache msgr rw =
+        Cache.handleCacheLove ()
+        Cache.handleCacheUsers msgr
+        Cache.handleCacheCatDown ()
+        Cache.handleCacheCatDownReward rw

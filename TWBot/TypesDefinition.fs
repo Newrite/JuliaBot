@@ -49,7 +49,7 @@ type Channels =
         | Lievrefr -> "lievrefru"
         | Cryo -> "cryo_0"
         | Madelinqa -> "madelineqt"
-        
+
 module Channels =
     let ToList =
         [ Reflyq
