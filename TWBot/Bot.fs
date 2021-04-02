@@ -62,7 +62,7 @@ module Cache =
         SingleData.DB.getCommands channel
         |> function
         | Ok (commands) ->
-            Logger.Log.StartTrace(sprintf "List of commands for %s - %A" channel.String commands, Logger.LogLevel.Debug)
+            Logger.Log.TraceDeb <| sprintf "List of commands for %s - %A" channel.String commands
             cacheChannelCommands <- Array.append cacheChannelCommands [| { ListCMD = (channel, commands) } |]
         | Error (_) -> ()
 
@@ -235,12 +235,12 @@ module Cache =
 
 
     let resolveCommandCache (msgr: MessageRead) cmd =
-        Logger.Log.StartTrace(sprintf "Start resolve CommandCache ", Logger.LogLevel.Information)
+        Logger.Log.TraceInf <| sprintf "Start resolve CommandCache "
 
         Array.tryFind (fun (elem: CacheChannelCommands) -> msgr.Channel = (fst elem.ListCMD)) cacheChannelCommands
         |> function
         | Some (list) ->
-            Logger.Log.StartTrace(sprintf "Get list of commands ", Logger.LogLevel.Information)
+            Logger.Log.TraceInf <| sprintf "Get list of commands "
             List.tryFind (fun (elem: ChannelCommand) -> elem.chCommand = cmd) (snd list.ListCMD)
         | None -> None
 
@@ -846,7 +846,7 @@ module Commands =
                     match defenderUserStatus with
                     | SubVin -> catDownUserAnswer msgr true defenderNickName rw
                     | SubLoose -> catDownUserAnswer msgr false defenderNickName rw
-                    | Moder -> ", Agakakskagesh Agakakskagesh Agakakskagesh"
+                    | Moder -> sprintf "%s, Agakakskagesh Agakakskagesh Agakakskagesh" msgr.User.DisplayName
                     | Streamer -> "У стримера бесплотность с капом отката на крики roflanEbalo"
                     | Nill -> sprintf "/me достает БФГ9000, но не может найти цель %s..." defenderNickName
                     | _ -> "/me something wrong..."
@@ -956,7 +956,7 @@ module Commands =
             sprintf "/timeout @%s 60 харакири" msgr.User.Name
 
     let addCommandDataBase (msgr: MessageRead) =
-        Logger.Log.StartTrace(sprintf "addCommandDataBase %A" msgr, Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb <| sprintf "addCommandDataBase %A" msgr
         let splited = msgr.Message.Split(' ')
 
         if (msgr.User.UserID <> msgr.RoomID)
@@ -983,7 +983,7 @@ module Commands =
                 err
 
     let deleteCommandDataBase (msgr: MessageRead) =
-        Logger.Log.StartTrace(sprintf "deleteCommandDataBase %A" msgr, Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb <| sprintf "deleteCommandDataBase %A" msgr
         let splited = msgr.Message.Split(' ')
 
         if (msgr.User.UserID <> msgr.RoomID)
@@ -1005,7 +1005,7 @@ module Commands =
             | None -> sprintf "Команда %s не найдена" (splited.[1].ToLower())
 
     let listCommandDataBase (msgr: MessageRead) =
-        Logger.Log.StartTrace(sprintf "listCommandDataBase %A" msgr, Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb <| sprintf "listCommandDataBase %A" msgr
 
         SingleData.DB.getCommands msgr.Channel
         |> function
@@ -1019,7 +1019,7 @@ module Commands =
         | Error (err) -> err
 
     let updateCommandDataBase (msgr: MessageRead) =
-        Logger.Log.StartTrace(sprintf "updateCommandDataBase %A" msgr, Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb <| sprintf "updateCommandDataBase %A" msgr
         let splited = msgr.Message.Split(' ')
 
         if (msgr.User.UserID <> msgr.RoomID)
@@ -1048,7 +1048,7 @@ module Commands =
             | None -> sprintf "Команда %s не найдена" command
 
     let updateChannelSettingDataBase (msgr: MessageRead) (rw: ReaderWriter) (setting: ChannelSettings) =
-        Logger.Log.StartTrace(sprintf "updateChannelSettingDataBase %A" msgr, Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb <| sprintf "updateChannelSettingDataBase %A" msgr
         let splited = msgr.Message.Split(' ')
 
         if (msgr.User.UserID <> msgr.RoomID)
@@ -1378,7 +1378,7 @@ module private Parse =
 
         d.Substring(1)
 
-    let command (msgr: MessageRead) (rw: ReaderWriter) =
+    let command (msgr: MessageRead) rw =
         Cache.checkPrefixChannel msgr.Channel
         |> resolveCommand msgr rw
         |> function
@@ -1416,7 +1416,6 @@ let handleLine (line: string) =
                   RoomID = Parse.roomID firstLineSplit
                   User = usr
                   Message = Parse.message secondLineSplit
-                  //Command = Parse.command chan secondLineSplit
                   RewardCode = Parse.rewardID firstLineSplit }
 
             msg |> Ok

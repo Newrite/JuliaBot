@@ -10,15 +10,13 @@ type SingleData private () =
     let databaseFilename = "data.sqlite3"
 
     let connectionStringFile =
-        Logger.Log.StartTrace(
-            sprintf "Connection to DB Data Source=%s;Version=3" databaseFilename,
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Connection to DB Data Source=%s;Version=3" databaseFilename
 
         sprintf "Data Source=%s;Version=3;" databaseFilename
 
     let connection =
-        Logger.Log.StartTrace("Start to connection database", Logger.LogLevel.Information)
+        Logger.Log.TraceDeb "Start to connection database"
         new SQLiteConnection(connectionStringFile)
 
     do connection.Open()
@@ -29,8 +27,11 @@ type SingleData private () =
             @"insert or ignore into BotSettings (Setting, Value) values"
             + "(@APIBearerToken, @APIBearerTokenValue)"
 
-        Logger.Log.StartTrace(sprintf "Start init botSettings", Logger.LogLevel.Information)
-        Logger.Log.StartTrace(sprintf "botSettings %s" cmd, Logger.LogLevel.Debug)
+        Logger.Log.TraceInf "Start init botSettings"
+
+        Logger.Log.TraceDeb
+        <| sprintf "botSettings %s" cmd
+
         use cmd = new SQLiteCommand(cmd, connection)
 
         cmd.Parameters.AddWithValue("@APIBearerToken", "APIBearerToken")
@@ -43,81 +44,74 @@ type SingleData private () =
             let resp = cmd.ExecuteNonQuery()
 
             if resp = -1 then
-                Logger.Log.StartTrace(
-                    sprintf "BotSettings is already created Code:%s" (string resp),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "BotSettings is already created Code:%s" (string resp)
 
-                Ok(sprintf "BotSettings is already created Code:%s" (string resp))
+                Ok
+                <| sprintf "BotSettings is already created Code:%s" (string resp)
             else
-                Logger.Log.StartTrace(
-                    sprintf "BotSettings is successful created Code:%s" (string resp),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "BotSettings is successful created Code:%s" (string resp)
 
-                Ok(sprintf "BotSettings is succeful created Code:%s" (string resp))
+                Ok
+                <| sprintf "BotSettings is succeful created Code:%s" (string resp)
         with :? SQLiteException as eX ->
-            Logger.Log.StartTrace(
-                (sprintf "BotSettings SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                Logger.LogLevel.Error
-            )
+            Logger.Log.TraceErr
+            <| sprintf "BotSettings SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-            Logger.Log.StartTrace(
-                (sprintf "BotSettings SQLiteException EX: %A" eX.StackTrace),
-                Logger.LogLevel.Exception
-            )
+            Logger.Log.TraceExc
+            <| sprintf "BotSettings SQLiteException EX: %A" eX.StackTrace
 
-            Error(sprintf "BotSettings SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+            Error
+            <| sprintf "BotSettings SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
     member self.createBotSettingsTable() =
         let cmd =
             "create table if not exists BotSettings (Setting text not null primary key, Value text)"
 
-        Logger.Log.StartTrace(sprintf "Start create BotSettingsTable", Logger.LogLevel.Information)
-        Logger.Log.StartTrace((sprintf "BotSettingsTable %s" cmd), Logger.LogLevel.Debug)
+        Logger.Log.TraceInf "Start create BotSettingsTable"
+
+        Logger.Log.TraceDeb
+        <| sprintf "BotSettingsTable %s" cmd
+
         use cmd = new SQLiteCommand(cmd, connection)
 
         try
             let resp = cmd.ExecuteNonQuery()
 
             if resp = -1 then
-                Logger.Log.StartTrace(
-                    (sprintf "BotSettingsTable is already created Code:%s" (string resp)),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "BotSettingsTable is already created Code:%s" (string resp)
 
-                Ok(sprintf "BotSettingsTable is already created Code:%s" (string resp))
+                Ok
+                <| sprintf "BotSettingsTable is already created Code:%s" (string resp)
             else
-                Logger.Log.StartTrace(
-                    (sprintf "BotSettingsTable is successful created Code:%s" (string resp)),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "BotSettingsTable is successful created Code:%s" (string resp)
 
                 self.initBotSettingsTable () |> ignore
-                Ok(sprintf "BotSettingsTable is successful created Code:%s" (string resp))
+
+                Ok
+                <| sprintf "BotSettingsTable is successful created Code:%s" (string resp)
         with :? SQLiteException as eX ->
-            Logger.Log.StartTrace(
-                (sprintf "CreateBotSettings SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                Logger.LogLevel.Error
-            )
+            Logger.Log.TraceErr
+            <| sprintf "CreateBotSettings SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-            Logger.Log.StartTrace(
-                (sprintf "CreateBotSettings SQLiteException EX: %A" eX.StackTrace),
-                Logger.LogLevel.Exception
-            )
+            Logger.Log.TraceExc
+            <| sprintf "CreateBotSettings SQLiteException EX: %A" eX.StackTrace
 
-            Error(sprintf "CreateBotSettings SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+            Error
+            <| sprintf "CreateBotSettings SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
     member self.createChannelCommandsTable(channel: Channels) =
         let cmd =
             sprintf @"create table if not exists %sCommands (CMD text not null primary key, ANSWER text)" channel.String
 
-        Logger.Log.StartTrace(
-            (sprintf "Start create ChannelCommandsTable for %s" channel.String),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start create ChannelCommandsTable for %s" channel.String
 
-        Logger.Log.StartTrace((sprintf "ChannelCommandsTable %s %s" channel.String cmd), Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb
+        <| sprintf "ChannelCommandsTable %s %s" channel.String cmd
 
         use cmd = new SQLiteCommand(cmd, connection)
 
@@ -125,31 +119,26 @@ type SingleData private () =
             let resp = cmd.ExecuteNonQuery()
 
             if resp = -1 then
-                Logger.Log.StartTrace(
-                    (sprintf "ChannelCommandsTable for %s is already created Code:%s" channel.String (string resp)),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "ChannelCommandsTable for %s is already created Code:%s" channel.String (string resp)
 
-                Ok(sprintf "ChannelCommandsTable for %s is already created Code:%s" channel.String (string resp))
+                Ok
+                <| sprintf "ChannelCommandsTable for %s is already created Code:%s" channel.String (string resp)
             else
-                Logger.Log.StartTrace(
-                    (sprintf "ChannelCommandsTable for %s is successful created Code:%s" channel.String (string resp)),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "ChannelCommandsTable for %s is successful created Code:%s" channel.String (string resp)
 
-                Ok(sprintf "ChannelCommandsTable for %s is successful created Code:%s" channel.String (string resp))
+                Ok
+                <| sprintf "ChannelCommandsTable for %s is successful created Code:%s" channel.String (string resp)
         with :? SQLiteException as eX ->
-            Logger.Log.StartTrace(
-                (sprintf "ChannelCommandsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                Logger.LogLevel.Error
-            )
+            Logger.Log.TraceErr
+            <| sprintf "ChannelCommandsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-            Logger.Log.StartTrace(
-                (sprintf "ChannelCommandsTable SQLiteException EX: %A" eX.StackTrace),
-                Logger.LogLevel.Exception
-            )
+            Logger.Log.TraceExc
+            <| sprintf "ChannelCommandsTable SQLiteException EX: %A" eX.StackTrace
 
-            Error(sprintf "ChannelCommandsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+            Error
+            <| sprintf "ChannelCommandsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
     member private self.initChannelSettingsTable(channel: Channels) =
         let cmd =
@@ -164,12 +153,11 @@ type SingleData private () =
             + "(@EmotionToggle, @EmotionToggleValue)"
 
 
-        Logger.Log.StartTrace(
-            (sprintf "Start init ChannelSettingsTable for %s" channel.String),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start init ChannelSettingsTable for %s" channel.String
 
-        Logger.Log.StartTrace((sprintf "ChannelSettingsTable %s P: %s" channel.String cmd), Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb
+        <| sprintf "ChannelSettingsTable %s P: %s" channel.String cmd
 
         use cmd = new SQLiteCommand(cmd, connection)
 
@@ -200,37 +188,32 @@ type SingleData private () =
         try
             let code = cmd.ExecuteNonQuery()
 
-            Logger.Log.StartTrace(
-                (sprintf "ChannelSettingsTable for %s is successful init Code:%s" channel.String (string code)),
-                Logger.LogLevel.Information
-            )
+            Logger.Log.TraceInf
+            <| sprintf "ChannelSettingsTable for %s is successful init Code:%s" channel.String (string code)
 
-            Ok(sprintf "ChannelSettingsTable for %s is successful init Code:%s" channel.String (string code))
+            Ok
+            <| sprintf "ChannelSettingsTable for %s is successful init Code:%s" channel.String (string code)
         with :? SQLiteException as eX ->
 
-            Logger.Log.StartTrace(
-                (sprintf "ChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                Logger.LogLevel.Error
-            )
+            Logger.Log.TraceErr
+            <| sprintf "ChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-            Logger.Log.StartTrace(
-                (sprintf "ChannelSettingsTable SQLiteException EX: %A" eX.StackTrace),
-                Logger.LogLevel.Exception
-            )
+            Logger.Log.TraceExc
+            <| sprintf "ChannelSettingsTable SQLiteException EX: %A" eX.StackTrace
 
-            Error(sprintf "ChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+            Error
+            <| sprintf "ChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
     member private self.checkChannelCommand (channel: Channels) (command: ChannelCommand) =
         let cmd =
             sprintf @"select CMD from %sCommands where CMD = (@command)" channel.String
 
 
-        Logger.Log.StartTrace(
-            (sprintf "Start check %s channel command %s" channel.String command.chCommand),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start check %s channel command %s" channel.String command.chCommand
 
-        Logger.Log.StartTrace((sprintf "checkChannelCommand %s P: %s" channel.String cmd), Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb
+        <| sprintf "checkChannelCommand %s P: %s" channel.String cmd
 
         use cmd = new SQLiteCommand(cmd, connection)
 
@@ -241,32 +224,25 @@ type SingleData private () =
             let resp = cmd.ExecuteScalar()
 
             if resp <> null then
-                Logger.Log.StartTrace(
-                    (sprintf "%s channel command %s is exist Code%s" channel.String command.chCommand (string resp)),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "%s channel command %s is exist Code%s" channel.String command.chCommand (string resp)
 
-                Ok(true)
+                Ok true
             else
-                Logger.Log.StartTrace(
-                    (sprintf "%s channel command %s is not exist Code%s" channel.String command.chCommand (string resp)),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "%s channel command %s is not exist Code%s" channel.String command.chCommand (string resp)
 
-                Ok(false)
+                Ok false
         with :? SQLiteException as eX ->
 
-            Logger.Log.StartTrace(
-                (sprintf "checkChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                Logger.LogLevel.Error
-            )
+            Logger.Log.TraceErr
+            <| sprintf "checkChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-            Logger.Log.StartTrace(
-                (sprintf "checkChannelCommand SQLiteException EX: %A" eX.StackTrace),
-                Logger.LogLevel.Exception
-            )
+            Logger.Log.TraceExc
+            <| sprintf "checkChannelCommand SQLiteException EX: %A" eX.StackTrace
 
-            Error(sprintf "checkChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+            Error
+            <| sprintf "checkChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
     member self.createChannelSettingsTable(channel: Channels) =
         let cmd =
@@ -274,12 +250,11 @@ type SingleData private () =
                 @"create table if not exists %sSettings (Setting text not null primary key, Value text)"
                 channel.String
 
-        Logger.Log.StartTrace(
-            (sprintf "Start create ChannelSettingsTable for %s channel" channel.String),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start create ChannelSettingsTable for %s channel" channel.String
 
-        Logger.Log.StartTrace((sprintf "createChannelSettingsTable %s P: %s" channel.String cmd), Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb
+        <| sprintf "createChannelSettingsTable %s P: %s" channel.String cmd
 
         use cmd = new SQLiteCommand(cmd, connection)
 
@@ -287,41 +262,34 @@ type SingleData private () =
             let resp = cmd.ExecuteNonQuery()
 
             if resp = -1 then
-                Logger.Log.StartTrace(
-                    (sprintf "ChannelSettingsTable for %s is already created Code%s" channel.String (string resp)),
-                    Logger.LogLevel.Warning
-                )
+                Logger.Log.TraceWarn
+                <| sprintf "ChannelSettingsTable for %s is already created Code%s" channel.String (string resp)
 
-                Ok(sprintf "ChannelSettingsTable for %s is already created Code%s" channel.String (string resp))
+                Ok
+                <| sprintf "ChannelSettingsTable for %s is already created Code%s" channel.String (string resp)
             else
                 self.initChannelSettingsTable channel |> ignore
 
-                Logger.Log.StartTrace(
-                    (sprintf "ChannelSettingsTable for %s is created Code%s" channel.String (string resp)),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "ChannelSettingsTable for %s is created Code%s" channel.String (string resp)
 
-                Ok(sprintf "ChannelSettingsTable for %s is created Code%s" channel.String (string resp))
+                Ok
+                <| sprintf "ChannelSettingsTable for %s is created Code%s" channel.String (string resp)
         with :? SQLiteException as eX ->
 
-            Logger.Log.StartTrace(
-                (sprintf "createChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                Logger.LogLevel.Error
-            )
+            Logger.Log.TraceErr
+            <| sprintf "createChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-            Logger.Log.StartTrace(
-                (sprintf "createChannelSettingsTable SQLiteException EX: %A" eX.StackTrace),
-                Logger.LogLevel.Exception
-            )
+            Logger.Log.TraceExc
+            <| sprintf "createChannelSettingsTable SQLiteException EX: %A" eX.StackTrace
 
-            Error(sprintf "createChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+            Error
+            <| sprintf "createChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
     member self.addChannelCommand (channel: Channels) (command: ChannelCommand) =
 
-        Logger.Log.StartTrace(
-            (sprintf "Start check command for add ChannelCommand for %s channel" channel.String),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start check command for add ChannelCommand for %s channel" channel.String
 
         self.checkChannelCommand channel command
         |> function
@@ -330,15 +298,11 @@ type SingleData private () =
                 let cmd =
                     sprintf @"insert or ignore into %sCommands (CMD, ANSWER) values (@command, @answer)" channel.String
 
-                Logger.Log.StartTrace(
-                    (sprintf "Start add ChannelCommand for %s channel" channel.String),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "Start add ChannelCommand for %s channel" channel.String
 
-                Logger.Log.StartTrace(
-                    (sprintf "addChannelCommand %s P: %s %s" channel.String command.chAnswer command.chCommand),
-                    Logger.LogLevel.Debug
-                )
+                Logger.Log.TraceDeb
+                <| sprintf "addChannelCommand %s P: %s %s" channel.String command.chAnswer command.chCommand
 
                 use cmd = new SQLiteCommand(cmd, connection)
 
@@ -352,54 +316,43 @@ type SingleData private () =
 
                     let code = cmd.ExecuteNonQuery()
 
-                    Logger.Log.StartTrace(
-                        (sprintf
-                            "Command %s for channel %s successful created Code%s"
-                            command.chCommand
-                            channel.String
-                            (string code)),
-                        Logger.LogLevel.Information
-                    )
+                    Logger.Log.TraceInf
+                    <| sprintf
+                        "Command %s for channel %s successful created Code%s"
+                           command.chCommand
+                           channel.String
+                           (string code)
 
-                    Ok(
-                        sprintf
-                            "Command %s for channel %s successful created Code%s"
-                            command.chCommand
-                            channel.String
-                            (string code)
-                    )
+                    Ok
+                    <| sprintf
+                        "Command %s for channel %s successful created Code%s"
+                           command.chCommand
+                           channel.String
+                           (string code)
                 with :? SQLiteException as eX ->
-                    Logger.Log.StartTrace(
-                        (sprintf "createChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                        Logger.LogLevel.Error
-                    )
+                    Logger.Log.TraceErr
+                    <| sprintf "createChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-                    Logger.Log.StartTrace(
-                        (sprintf "createChannelSettingsTable SQLiteException EX: %A" eX.StackTrace),
-                        Logger.LogLevel.Exception
-                    )
+                    Logger.Log.TraceExc
+                    <| sprintf "createChannelSettingsTable SQLiteException EX: %A" eX.StackTrace
 
-                    Error(sprintf "createChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+                    Error
+                    <| sprintf "createChannelSettingsTable SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
             else
-                Logger.Log.StartTrace(
-                    (sprintf "Command %s for channel %s is already exist" command.chCommand channel.String),
-                    Logger.LogLevel.Warning
-                )
+                Logger.Log.TraceWarn
+                <| sprintf "Command %s for channel %s is already exist" command.chCommand channel.String
 
-                Error(sprintf "Command %s for channel %s is already exist" command.chCommand channel.String)
+                Error
+                <| sprintf "Command %s for channel %s is already exist" command.chCommand channel.String
         | Error (err) ->
-            Logger.Log.StartTrace(
-                (sprintf "Check command failed for %s channel" channel.String),
-                Logger.LogLevel.Warning
-            )
+            Logger.Log.TraceWarn
+            <| sprintf "Check command failed for %s channel" channel.String
 
             Error err
 
     member self.deleteChannelCommand (channel: Channels) (command: ChannelCommand) =
-        Logger.Log.StartTrace(
-            (sprintf "Start check command for delete ChannelCommand for %s channel" channel.String),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start check command for delete ChannelCommand for %s channel" channel.String
 
         self.checkChannelCommand channel command
         |> function
@@ -408,15 +361,11 @@ type SingleData private () =
                 let cmd =
                     sprintf @"delete from %sCommands where CMD = (@command)" channel.String
 
-                Logger.Log.StartTrace(
-                    (sprintf "Start delete ChannelCommand for %s channel" channel.String),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "Start delete ChannelCommand for %s channel" channel.String
 
-                Logger.Log.StartTrace(
-                    (sprintf "deleteChannelCommand %s P: %s %s" channel.String command.chAnswer command.chCommand),
-                    Logger.LogLevel.Debug
-                )
+                Logger.Log.TraceDeb
+                <| sprintf "deleteChannelCommand %s P: %s %s" channel.String command.chAnswer command.chCommand
 
                 use cmd = new SQLiteCommand(cmd, connection)
 
@@ -426,56 +375,45 @@ type SingleData private () =
                 try
                     let code = cmd.ExecuteNonQuery()
 
-                    Logger.Log.StartTrace(
-                        (sprintf
-                            "Command %s for channel %s successful delete Code%s"
-                            command.chCommand
-                            channel.String
-                            (string code)),
-                        Logger.LogLevel.Information
-                    )
+                    Logger.Log.TraceInf
+                    <| sprintf
+                        "Command %s for channel %s successful delete Code%s"
+                           command.chCommand
+                           channel.String
+                           (string code)
 
-                    Ok(
-                        sprintf
-                            "Command %s for channel %s successful delete Code%s"
-                            command.chCommand
-                            channel.String
-                            (string code)
-                    )
+                    Ok
+                    <| sprintf
+                        "Command %s for channel %s successful delete Code%s"
+                           command.chCommand
+                           channel.String
+                           (string code)
                 with :? SQLiteException as eX ->
 
-                    Logger.Log.StartTrace(
-                        (sprintf "deleteChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                        Logger.LogLevel.Error
-                    )
+                    Logger.Log.TraceErr
+                    <| sprintf "deleteChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-                    Logger.Log.StartTrace(
-                        (sprintf "deleteChannelCommand SQLiteException EX: %A" eX.StackTrace),
-                        Logger.LogLevel.Exception
-                    )
+                    Logger.Log.TraceExc
+                    <| sprintf "deleteChannelCommand SQLiteException EX: %A" eX.StackTrace
 
-                    Error(sprintf "deleteChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+                    Error
+                    <| sprintf "deleteChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
             else
-                Logger.Log.StartTrace(
-                    (sprintf "Command %s for channel %s nor found" command.chCommand channel.String),
-                    Logger.LogLevel.Warning
-                )
+                Logger.Log.TraceWarn
+                <| sprintf "Command %s for channel %s nor found" command.chCommand channel.String
 
-                Ok(sprintf "Command %s for channel %s nor found" command.chCommand channel.String)
+                Ok
+                <| sprintf "Command %s for channel %s nor found" command.chCommand channel.String
         | Error (err) ->
-            Logger.Log.StartTrace(
-                (sprintf "Check command failed for %s channel" channel.String),
-                Logger.LogLevel.Warning
-            )
+            Logger.Log.TraceWarn
+            <| sprintf "Check command failed for %s channel" channel.String
 
             Error err
 
 
     member self.updateChannelCommand (channel: Channels) (command: ChannelCommand) =
-        Logger.Log.StartTrace(
-            (sprintf "Start check command for update ChannelCommand for %s channel" channel.String),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start check command for update ChannelCommand for %s channel" channel.String
 
         self.checkChannelCommand channel command
         |> function
@@ -484,15 +422,11 @@ type SingleData private () =
                 let cmd =
                     sprintf @"update %sCommands set ANSWER = (@value) where CMD = (@command)" channel.String
 
-                Logger.Log.StartTrace(
-                    (sprintf "Start update ChannelCommand for %s channel" channel.String),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "Start update ChannelCommand for %s channel" channel.String
 
-                Logger.Log.StartTrace(
-                    (sprintf "updateChannelCommand %s P: %s %s" channel.String command.chAnswer command.chCommand),
-                    Logger.LogLevel.Debug
-                )
+                Logger.Log.TraceDeb
+                <| sprintf "updateChannelCommand %s P: %s %s" channel.String command.chAnswer command.chCommand
 
                 use cmd = new SQLiteCommand(cmd, connection)
 
@@ -505,47 +439,38 @@ type SingleData private () =
                 try
                     let code = cmd.ExecuteNonQuery()
 
-                    Logger.Log.StartTrace(
-                        (sprintf
-                            "Command %s for channel %s successful update Code%s"
-                            command.chCommand
-                            channel.String
-                            (string code)),
-                        Logger.LogLevel.Information
-                    )
+                    Logger.Log.TraceInf
+                    <| sprintf
+                        "Command %s for channel %s successful update Code%s"
+                           command.chCommand
+                           channel.String
+                           (string code)
 
-                    Ok(
-                        sprintf
-                            "Command %s for channel %s successful update Code%s"
-                            command.chCommand
-                            channel.String
-                            (string code)
-                    )
+                    Ok
+                    <| sprintf
+                        "Command %s for channel %s successful update Code%s"
+                           command.chCommand
+                           channel.String
+                           (string code)
                 with :? SQLiteException as eX ->
 
-                    Logger.Log.StartTrace(
-                        (sprintf "updateChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                        Logger.LogLevel.Error
-                    )
+                    Logger.Log.TraceErr
+                    <| sprintf "updateChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-                    Logger.Log.StartTrace(
-                        (sprintf "updateChannelCommand SQLiteException EX: %A" eX.StackTrace),
-                        Logger.LogLevel.Exception
-                    )
+                    Logger.Log.TraceExc
+                    <| sprintf "updateChannelCommand SQLiteException EX: %A" eX.StackTrace
 
-                    Error(sprintf "updateChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+                    Error
+                    <| sprintf "updateChannelCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
             else
-                Logger.Log.StartTrace(
-                    (sprintf "Command %s for channel %s nor found" command.chCommand channel.String),
-                    Logger.LogLevel.Warning
-                )
+                Logger.Log.TraceWarn
+                <| sprintf "Command %s for channel %s nor found" command.chCommand channel.String
 
-                Ok(sprintf "Command %s for channel %s nor found" command.chCommand channel.String)
+                Ok
+                <| sprintf "Command %s for channel %s nor found" command.chCommand channel.String
         | Error (err) ->
-            Logger.Log.StartTrace(
-                (sprintf "Check command failed for %s channel" channel.String),
-                Logger.LogLevel.Warning
-            )
+            Logger.Log.TraceWarn
+            <| sprintf "Check command failed for %s channel" channel.String
 
             Error err
 
@@ -554,15 +479,11 @@ type SingleData private () =
             let cmd =
                 sprintf @"update %sSettings set Value = (@value) where Setting = (@setting)" channel.String
 
-            Logger.Log.StartTrace(
-                (sprintf "Start set ChannelSetting for %s channel" channel.String),
-                Logger.LogLevel.Information
-            )
+            Logger.Log.TraceInf
+            <| sprintf "Start set ChannelSetting for %s channel" channel.String
 
-            Logger.Log.StartTrace(
-                (sprintf "setChannelSetting %s %s to %s" channel.String settingName setting.chValue),
-                Logger.LogLevel.Debug
-            )
+            Logger.Log.TraceDeb
+            <| sprintf "setChannelSetting %s %s to %s" channel.String settingName setting.chValue
 
             use cmd = new SQLiteCommand(cmd, connection)
 
@@ -576,57 +497,46 @@ type SingleData private () =
                 let resp = cmd.ExecuteNonQuery()
 
                 if resp = 0 then
-                    Logger.Log.StartTrace(
-                        (sprintf
-                            "ChannelSetting %s for %s channel not found Code%s"
-                            settingName
-                            channel.String
-                            (string resp)),
-                        Logger.LogLevel.Warning
-                    )
+                    Logger.Log.TraceWarn
+                    <| sprintf
+                        "ChannelSetting %s for %s channel not found Code%s"
+                           settingName
+                           channel.String
+                           (string resp)
 
-                    Ok(
-                        sprintf
-                            "ChannelSetting %s for %s channel not found Code%s"
-                            settingName
-                            channel.String
-                            (string resp)
-                    )
+                    Ok
+                    <| sprintf
+                        "ChannelSetting %s for %s channel not found Code%s"
+                           settingName
+                           channel.String
+                           (string resp)
                 else
-                    Logger.Log.StartTrace(
-                        (sprintf
-                            "ChannelSetting %s for %s channel successful updated Code%s"
-                            settingName
-                            channel.String
-                            (string resp)),
-                        Logger.LogLevel.Information
-                    )
+                    Logger.Log.TraceInf
+                    <| sprintf
+                        "ChannelSetting %s for %s channel successful updated Code%s"
+                           settingName
+                           channel.String
+                           (string resp)
 
-                    Ok(
-                        sprintf
-                            "ChannelSetting %s for %s channel successful updated Code%s"
-                            settingName
-                            channel.String
-                            (string resp)
-                    )
+                    Ok
+                    <| sprintf
+                        "ChannelSetting %s for %s channel successful updated Code%s"
+                           settingName
+                           channel.String
+                           (string resp)
             with :? SQLiteException as eX ->
 
-                Logger.Log.StartTrace(
-                    (sprintf "setChannelSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                    Logger.LogLevel.Error
-                )
+                Logger.Log.TraceErr
+                <| sprintf "setChannelSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-                Logger.Log.StartTrace(
-                    (sprintf "setChannelSetting SQLiteException EX: %A" eX.StackTrace),
-                    Logger.LogLevel.Exception
-                )
+                Logger.Log.TraceExc
+                <| sprintf "setChannelSetting SQLiteException EX: %A" eX.StackTrace
 
-                Error(sprintf "setChannelSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+                Error
+                <| sprintf "setChannelSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-        Logger.Log.StartTrace(
-            (sprintf "Start match ChannelSetting for %s channel" channel.String),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start match ChannelSetting for %s channel" channel.String
 
         match setting.chSetting with
         | ActivePatterns.Prefix settingName -> execute settingName
@@ -639,12 +549,11 @@ type SingleData private () =
             let cmd =
                 sprintf @"select * from %sSettings where Setting = (@setting)" channel.String
 
-            Logger.Log.StartTrace(
-                (sprintf "Start get ChannelSetting for %s channel" channel.String),
-                Logger.LogLevel.Information
-            )
+            Logger.Log.TraceInf
+            <| sprintf "Start get ChannelSetting for %s channel" channel.String
 
-            Logger.Log.StartTrace((sprintf "getChannelSetting %s %s" channel.String settingName), Logger.LogLevel.Debug)
+            Logger.Log.TraceDeb
+            <| sprintf "getChannelSetting %s %s" channel.String settingName
 
             use cmd = new SQLiteCommand(cmd, connection)
 
@@ -657,52 +566,43 @@ type SingleData private () =
 
                 if reader.Read() then
 
-                    Logger.Log.StartTrace(
-                        (sprintf "Get ChannelSetting for %s channel successful" channel.String),
-                        Logger.LogLevel.Information
-                    )
+                    Logger.Log.TraceInf
+                    <| sprintf "Get ChannelSetting for %s channel successful" channel.String
 
-                    Ok(
-                        match setting with
-                        | Prefix _ ->
-                            { chSetting = ChannelSettings.Prefix
-                              chValue = reader.["value"].ToString() }
-                        | EmotionCoolDown _ ->
-                            { chSetting = ChannelSettings.EmotionCoolDown
-                              chValue = reader.["value"].ToString() }
-                        | Toggle _ ->
-                            { chSetting = ChannelSettings.Toggle
-                              chValue = reader.["value"].ToString() }
-                        | EmotionToggle _ ->
-                            { chSetting = ChannelSettings.EmotionToggle
-                              chValue = reader.["value"].ToString() }
-                    )
+                    Ok
+                    <| match setting with
+                       | Prefix _ ->
+                           { chSetting = ChannelSettings.Prefix
+                             chValue = reader.["value"].ToString() }
+                       | EmotionCoolDown _ ->
+                           { chSetting = ChannelSettings.EmotionCoolDown
+                             chValue = reader.["value"].ToString() }
+                       | Toggle _ ->
+                           { chSetting = ChannelSettings.Toggle
+                             chValue = reader.["value"].ToString() }
+                       | EmotionToggle _ ->
+                           { chSetting = ChannelSettings.EmotionToggle
+                             chValue = reader.["value"].ToString() }
                 else
 
-                    Logger.Log.StartTrace(
-                        (sprintf "Get ChannelSetting %s for %s channel not found" settingName channel.String),
-                        Logger.LogLevel.Warning
-                    )
+                    Logger.Log.TraceWarn
+                    <| sprintf "Get ChannelSetting %s for %s channel not found" settingName channel.String
 
-                    Error(sprintf "Get ChannelSetting %s for %s channel not found" settingName channel.String)
+                    Error
+                    <| sprintf "Get ChannelSetting %s for %s channel not found" settingName channel.String
             with :? SQLiteException as eX ->
 
-                Logger.Log.StartTrace(
-                    (sprintf "getChannelSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                    Logger.LogLevel.Error
-                )
+                Logger.Log.TraceErr
+                <| sprintf "getChannelSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-                Logger.Log.StartTrace(
-                    (sprintf "getChannelSetting SQLiteException EX: %A" eX.StackTrace),
-                    Logger.LogLevel.Exception
-                )
+                Logger.Log.TraceExc
+                <| sprintf "getChannelSetting SQLiteException EX: %A" eX.StackTrace
 
-                Error(sprintf "getChannelSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+                Error
+                <| sprintf "getChannelSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-        Logger.Log.StartTrace(
-            (sprintf "Start match ChannelSetting for %s channel" channel.String),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start match ChannelSetting for %s channel" channel.String
 
         match setting with
         | ActivePatterns.Prefix settingName -> execute settingName
@@ -714,12 +614,11 @@ type SingleData private () =
         let cmd =
             sprintf @"select * from %sCommands where CMD = (@command)" channel.String
 
-        Logger.Log.StartTrace(
-            (sprintf "Start getCommand %s for %s channel" command channel.String),
-            Logger.LogLevel.Information
-        )
+        Logger.Log.TraceInf
+        <| sprintf "Start getCommand %s for %s channel" command channel.String
 
-        Logger.Log.StartTrace((sprintf "getCommand %s %s" channel.String cmd), Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb
+        <| sprintf "getCommand %s %s" channel.String cmd
 
         use cmd = new SQLiteCommand(cmd, connection)
 
@@ -730,43 +629,38 @@ type SingleData private () =
             let reader = cmd.ExecuteReader()
 
             if reader.Read() then
-                Logger.Log.StartTrace(
-                    (sprintf "Get Command %s for %s channel successful" command channel.String),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "Get Command %s for %s channel successful" command channel.String
 
-                Ok(
-                    { chCommand = reader.["CMD"].ToString()
-                      chAnswer = reader.["ANSWER"].ToString() }
-                )
+                Ok
+                <| { chCommand = reader.["CMD"].ToString()
+                     chAnswer = reader.["ANSWER"].ToString() }
             else
-                Logger.Log.StartTrace(
-                    (sprintf "Command %s for %s channel not found" command channel.String),
-                    Logger.LogLevel.Warning
-                )
+                Logger.Log.TraceWarn
+                <| sprintf "Command %s for %s channel not found" command channel.String
 
-                Error(sprintf "Command %s for %s channel not found" command channel.String)
+                Error
+                <| sprintf "Command %s for %s channel not found" command channel.String
         with :? SQLiteException as eX ->
 
-            Logger.Log.StartTrace(
-                (sprintf "getCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                Logger.LogLevel.Error
-            )
+            Logger.Log.TraceErr
+            <| sprintf "getCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-            Logger.Log.StartTrace(
-                (sprintf "getCommand SQLiteException EX: %A" eX.StackTrace),
-                Logger.LogLevel.Exception
-            )
+            Logger.Log.TraceExc
+            <| sprintf "getCommand SQLiteException EX: %A" eX.StackTrace
 
-            Error(sprintf "getCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+            Error
+            <| sprintf "getCommand SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
     member self.getCommands(channel: Channels) =
         let cmd =
             sprintf @"select * from %sCommands" channel.String
 
-        Logger.Log.StartTrace((sprintf "Start getCommands for %s channel" channel.String), Logger.LogLevel.Information)
+        Logger.Log.TraceInf
+        <| sprintf "Start getCommands for %s channel" channel.String
 
-        Logger.Log.StartTrace(sprintf "getCommands %s %s" channel.String cmd, Logger.LogLevel.Debug)
+        Logger.Log.TraceDeb
+        <| sprintf "getCommands %s %s" channel.String cmd
 
         use cmd = new SQLiteCommand(cmd, connection)
 
@@ -774,47 +668,42 @@ type SingleData private () =
             let reader = cmd.ExecuteReader()
 
             if not reader.IsClosed then
-                Logger.Log.StartTrace(
-                    (sprintf "Get Commands for %s channel successful" channel.String),
-                    Logger.LogLevel.Information
-                )
+                Logger.Log.TraceInf
+                <| sprintf "Get Commands for %s channel successful" channel.String
 
-                Ok(
-                    [ while reader.Read() do
+                Ok
+                <| [ while reader.Read() do
 
-                          yield
-                              { chCommand = reader.["CMD"].ToString()
-                                chAnswer = reader.["ANSWER"].ToString() } ]
-                )
+                         yield
+                             { chCommand = reader.["CMD"].ToString()
+                               chAnswer = reader.["ANSWER"].ToString() } ]
             else
-                Logger.Log.StartTrace(
-                    (sprintf "Commands for %s channel not found" channel.String),
-                    Logger.LogLevel.Warning
-                )
+                Logger.Log.TraceWarn
+                <| sprintf "Commands for %s channel not found" channel.String
 
-                Error(sprintf "Commands for %s channel not found" channel.String)
+                Error
+                <| sprintf "Commands for %s channel not found" channel.String
         with :? SQLiteException as eX ->
 
-            Logger.Log.StartTrace(
-                (sprintf "getCommands SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                Logger.LogLevel.Error
-            )
+            Logger.Log.TraceErr
+            <| sprintf "getCommands SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-            Logger.Log.StartTrace(
-                (sprintf "getCommands SQLiteException EX: %A" eX.StackTrace),
-                Logger.LogLevel.Exception
-            )
+            Logger.Log.TraceExc
+            <| sprintf "getCommands SQLiteException EX: %A" eX.StackTrace
 
-            Error(sprintf "getCommands SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+            Error
+            <| sprintf "getCommands SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
     member self.setBotSetting(setting: BotSetting) =
         let execute settingName =
             let cmd =
                 sprintf @"update BotSettings set Value = (@value) where Setting = (@setting)"
 
-            Logger.Log.StartTrace((sprintf "Start set BotSetting %s" settingName), Logger.LogLevel.Information)
+            Logger.Log.TraceInf
+            <| sprintf "Start set BotSetting %s" settingName
 
-            Logger.Log.StartTrace((sprintf "setBotSetting %s" cmd), Logger.LogLevel.Debug)
+            Logger.Log.TraceDeb
+            <| sprintf "setBotSetting %s" cmd
 
             use cmd = new SQLiteCommand(cmd, connection)
 
@@ -828,30 +717,30 @@ type SingleData private () =
                 let resp = cmd.ExecuteNonQuery()
 
                 if resp = 0 then
-                    Logger.Log.StartTrace((sprintf "BotSetting %s not found" settingName), Logger.LogLevel.Warning)
-                    Ok(sprintf "BotSetting %s not found" settingName)
-                else
-                    Logger.Log.StartTrace(
-                        (sprintf "BotSetting %s successful updated" settingName),
-                        Logger.LogLevel.Warning
-                    )
+                    Logger.Log.TraceWarn
+                    <| sprintf "BotSetting %s not found" settingName
 
-                    Ok(sprintf "BotSetting %s successful updated" settingName)
+                    Ok
+                    <| sprintf "BotSetting %s not found" settingName
+                else
+                    Logger.Log.TraceWarn
+                    <| sprintf "BotSetting %s successful updated" settingName
+
+                    Ok
+                    <| sprintf "BotSetting %s successful updated" settingName
             with :? SQLiteException as eX ->
 
-                Logger.Log.StartTrace(
-                    (sprintf "setBotSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                    Logger.LogLevel.Error
-                )
+                Logger.Log.TraceErr
+                <| sprintf "setBotSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-                Logger.Log.StartTrace(
-                    (sprintf "setBotSetting SQLiteException EX: %A" eX.StackTrace),
-                    Logger.LogLevel.Exception
-                )
+                Logger.Log.TraceExc
+                <| sprintf "setBotSetting SQLiteException EX: %A" eX.StackTrace
 
-                Error(sprintf "setBotSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+                Error
+                <| sprintf "setBotSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-        Logger.Log.StartTrace((sprintf "Start match BotSetting for set"), Logger.LogLevel.Information)
+        Logger.Log.TraceInf
+        <| sprintf "Start match BotSetting for set"
 
         match setting.bSetting with
         | ActivePatterns.APIBearerToken settingName -> execute settingName
@@ -861,9 +750,11 @@ type SingleData private () =
             let cmd =
                 sprintf @"select * from BotSettings where Setting = (@setting)"
 
-            Logger.Log.StartTrace((sprintf "Start get BotSetting %s" settingName), Logger.LogLevel.Information)
+            Logger.Log.TraceInf
+            <| sprintf "Start get BotSetting %s" settingName
 
-            Logger.Log.StartTrace((sprintf "getBotSetting %s" cmd), Logger.LogLevel.Debug)
+            Logger.Log.TraceDeb
+            <| sprintf "getBotSetting %s" cmd
 
             use cmd = new SQLiteCommand(cmd, connection)
 
@@ -875,32 +766,29 @@ type SingleData private () =
 
                 if reader.Read() then
 
-                    Logger.Log.StartTrace(
-                        (sprintf "BotSetting %s successful get" settingName),
-                        Logger.LogLevel.Information
-                    )
+                    Logger.Log.TraceInf
+                    <| sprintf "BotSetting %s successful get" settingName
 
-                    Ok(
-                        match setting with
-                        | APIBearerToken _ ->
-                            { bSetting = BotSettings.APIBearerToken
-                              bValue = reader.["value"].ToString() }
-                    )
+                    Ok
+                    <| match setting with
+                       | APIBearerToken _ ->
+                           { bSetting = BotSettings.APIBearerToken
+                             bValue = reader.["value"].ToString() }
                 else
-                    Logger.Log.StartTrace((sprintf "BotSetting %s not found" settingName), Logger.LogLevel.Warning)
-                    Error(sprintf "BotSetting %s not found" settingName)
+                    Logger.Log.TraceWarn
+                    <| sprintf "BotSetting %s not found" settingName
+
+                    Error
+                    <| sprintf "BotSetting %s not found" settingName
             with :? SQLiteException as eX ->
-                Logger.Log.StartTrace(
-                    (sprintf "getBotSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters),
-                    Logger.LogLevel.Error
-                )
+                Logger.Log.TraceWarn
+                <| sprintf "getBotSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
-                Logger.Log.StartTrace(
-                    (sprintf "getBotSetting SQLiteException EX: %A" eX.StackTrace),
-                    Logger.LogLevel.Exception
-                )
+                Logger.Log.TraceExc
+                <| sprintf "getBotSetting SQLiteException EX: %A" eX.StackTrace
 
-                Error(sprintf "getBotSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters)
+                Error
+                <| sprintf "getBotSetting SQLiteException Err:%s P: %A" eX.Message cmd.Parameters
 
         match setting with
         | ActivePatterns.APIBearerToken settingName -> execute settingName
