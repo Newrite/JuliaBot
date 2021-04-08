@@ -25,7 +25,7 @@ module Cache =
         Logger.Log.TraceInf
         <| sprintf "Update cache channel settings for %s" channel.String
         Logger.Log.TraceDeb
-        <| sprintf "Old settings %A" (Array.find (fun elem -> fst elem = channel) cacheChannelSettings)
+        <| sprintf "Old settings %A" (Array.tryFind (fun elem -> fst elem = channel) cacheChannelSettings)
         let prefix =
             SingleData.DB.getChannelSetting channel ChannelSettings.Prefix
             |> function

@@ -1,7 +1,6 @@
 ﻿//dotnet publish -c Release  -r linux-arm -p:PublishSingleFile=true --self-contained true
 //builds for arm orange pi pc+
 //for build on other platform edit TWBot.fsproj
-open System.Collections
 open TWBot
 open TWBot.TypesDefinition
 open TWBot.Logger
