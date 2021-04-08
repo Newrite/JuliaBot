@@ -758,8 +758,8 @@ type SingleData private () =
 
             use cmd = new SQLiteCommand(cmd, connection)
 
-            cmd.Parameters.AddWithValue("@setting", settingName)
-            |> ignore
+            cmd.Parameters.AddWithValue("@setting", settingName) |> string |> Logger.Log.TraceDeb
+            
 
             try
                 let reader = cmd.ExecuteReader()

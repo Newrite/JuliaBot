@@ -1,5 +1,6 @@
 ﻿module TWBot.Logger
 
+open TWBot.TypesDefinition
 open System
 open System.IO
 open System.Runtime.CompilerServices
@@ -19,6 +20,41 @@ type LogLevel =
         | Information -> "I"
         | Debug -> "D"
         | Exception -> "EX"
+
+module LogChat =
+    let private messageUser (msgr: MessageRead) =
+        sprintf "[%s][%A][%s] %s" msgr.Channel.String DateTime.Now msgr.User.Name msgr.Message
+        
+    let private toWrite (messageToLog: string) (channel: Channels) =
+        use logFile =
+            let path =
+                sprintf "logschat/%s.txt" channel.String
+            File.Open(path, FileMode.Append)
+        use logFileWriter = new StreamWriter(logFile)
+        logFileWriter.WriteLine(messageToLog)
+        logFileWriter.Flush()
+        
+    let private toWriteRaw (messageToLog: string) =
+        use logFile =
+            let path =
+                sprintf "logschat/%s.txt" "TWITCH_RAW_MESSAGE"
+            File.Open(path, FileMode.Append)
+        use logFileWriter = new StreamWriter(logFile)
+        logFileWriter.WriteLine(messageToLog)
+        logFileWriter.Flush()
+            
+    let writePrintBot messageToLog (channel: Channels) =
+        printfn "%s" messageToLog
+        toWrite messageToLog channel
+        
+    let writePrintRaw messageToLog =
+        printfn "%s" messageToLog
+        toWriteRaw messageToLog
+        
+    let writePrint msgr =
+        let msg = messageUser msgr
+        printfn "%s" msg
+        toWrite msg msgr.Channel
 
 module private Log =
 

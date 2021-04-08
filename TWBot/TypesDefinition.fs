@@ -35,6 +35,7 @@ type Channels =
     | Lievrefr
     | Cryo
     | Madelinqa
+    | Kaelia
     member self.String =
         match self with
         | Reflyq -> "reflyq"
@@ -49,6 +50,7 @@ type Channels =
         | Lievrefr -> "lievrefru"
         | Cryo -> "cryo_0"
         | Madelinqa -> "madelineqt"
+        | Kaelia -> "kaelia_kael"
 
 module Channels =
     let ToList =
@@ -63,7 +65,8 @@ module Channels =
           Enemy
           Lievrefr
           Cryo
-          Madelinqa ]
+          Madelinqa
+          Kaelia ]
 
 type StatusUser =
     | Broadcaster

@@ -7,10 +7,10 @@ open TypesDefinition
 open ActivePatterns
 open DataBase
 
-
 module Cache =
 
     let mutable tempReflyqMessageCounter = 0
+    let mutable tempKaeliaMessageCounter = 0
 
     let mutable cacheLovers : CacheLove array = Array.empty
     let mutable cacheCutDown : CacheCatDown array = Array.empty
@@ -21,7 +21,11 @@ module Cache =
     let mutable cacheChannelSettings : (Channels * CacheChannelSettings) array = Array.empty
     let mutable cacheChannelCommands : CacheChannelCommands array = Array.empty
 
-    let updateCacheChannelSettings channel =
+    let updateCacheChannelSettings (channel: Channels) =
+        Logger.Log.TraceInf
+        <| sprintf "Update cache channel settings for %s" channel.String
+        Logger.Log.TraceDeb
+        <| sprintf "Old settings %A" (Array.find (fun elem -> fst elem = channel) cacheChannelSettings)
         let prefix =
             SingleData.DB.getChannelSetting channel ChannelSettings.Prefix
             |> function
@@ -57,28 +61,44 @@ module Cache =
                       Toggle = toggle
                       EmotionToggle = etoggle
                       LastReactTime = (DateTime.Now.Ticks / 10000000L) }) |]
+                
+        Logger.Log.TraceInf "Update cache channel settings complete"
+        Logger.Log.TraceDeb
+        <| sprintf "New settings %A" (Array.find (fun elem -> fst elem = channel) cacheChannelSettings)
 
-    let addCacheChannelCommands channel =
+    let addCacheChannelCommands (channel: Channels) =
+        Logger.Log.TraceInf
+        <| sprintf "Add cache channel commands for %s" channel.String
         SingleData.DB.getCommands channel
         |> function
         | Ok (commands) ->
             Logger.Log.TraceDeb
-            <| sprintf "List of commands for %s - %A" channel.String commands
+            <| sprintf "List of adds commands for %s - %A" channel.String commands
 
             cacheChannelCommands <- Array.append cacheChannelCommands [| { ListCMD = (channel, commands) } |]
-        | Error (_) -> ()
+        | Error (err) ->
+            Logger.Log.TraceWarn
+            <| sprintf "Add cache channel getcommands for %s return err: %s" channel.String err
 
-    let updateCacheChannelCommands channel =
+    let updateCacheChannelCommands (channel: Channels) =
+        Logger.Log.TraceInf
+        <| sprintf "Update cache channel commands for %s" channel.String
         SingleData.DB.getCommands channel
         |> function
         | Ok (commands) ->
+            Logger.Log.TraceDeb
+            <| sprintf "List of updates commands for %s - %A" channel.String commands
             cacheChannelCommands <-
                 Array.filter (fun (elem: CacheChannelCommands) -> (fst elem.ListCMD) <> channel) cacheChannelCommands
 
             cacheChannelCommands <- Array.append cacheChannelCommands [| { ListCMD = (channel, commands) } |]
-        | Error (_) -> ()
+        | Error (err) ->
+            Logger.Log.TraceWarn
+            <| sprintf "Update cache channel getcommands for %s return err: %s" channel.String err
 
     let checkCacheLove loverName lovedName =
+        Logger.Log.TraceInf "Start check cache love"
+        Logger.Log.TraceDeb <| sprintf "checkCacheLove lover: %s loved: %s" loverName lovedName
         Array.tryFind
             (fun (elem: CacheLove) ->
                 elem.LovedName = lovedName
@@ -86,6 +106,8 @@ module Cache =
             cacheLovers
 
     let addCacheLove loverName lovedName percentLove =
+        Logger.Log.TraceInf "Start add cache love"
+        Logger.Log.TraceDeb <| sprintf "addCacheLove lover: %s loved: %s percent: %d" loverName lovedName percentLove
         checkCacheLove loverName lovedName
         |> function
         | None ->
@@ -96,31 +118,51 @@ module Cache =
                          LovedName = lovedName
                          TimeWhen = (DateTime.Now.Ticks / 10000000L)
                          PercentLove = percentLove } |]
-        | _ -> ()
+            Logger.Log.TraceInf "Lovers added to cache"
+        | _ -> Logger.Log.TraceInf "Lovers already in cache"
 
     let handleCacheLove () =
         cacheLovers <-
             Array.filter
-                (fun (elem: CacheLove) -> ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < 86400L)
-                cacheLovers
+                (fun (elem: CacheLove) ->
+                    if ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < 86400L then
+                        Logger.Log.TraceInf "Proc filter hanlder cache love"
+                        Logger.Log.TraceInf <| sprintf "handleCacheLove elem: %A" elem
+                        true
+                    else false) cacheLovers
 
     let checkToggleChannel channel =
         Array.tryFind (fun (elem: (Channels * CacheChannelSettings)) -> channel = fst elem) cacheChannelSettings
         |> function
-        | Some (tup) -> (snd tup).Toggle
-        | None -> false
+        | Some (tup) ->
+            //Лог закомментирован, потому что функция вызывается каждую итерацию основного цикла
+            //Logger.Log.TraceInf <| sprintf "Check channel toggle for %s: %b" channel.String (snd tup).Toggle
+            (snd tup).Toggle
+        | None ->
+            Logger.Log.TraceWarn <| sprintf "Check channel toggle for %s: No found" channel.String
+            false
 
     let checkEmotionToggleChannel channel =
         Array.tryFind (fun (elem: (Channels * CacheChannelSettings)) -> channel = fst elem) cacheChannelSettings
         |> function
-        | Some (tup) -> (snd tup).EmotionToggle
-        | None -> false
+        | Some (tup) ->
+            //Лог закомментирован, потому что функция вызывается каждую итерацию основного цикла
+            //Logger.Log.TraceInf <| sprintf "Check channel emotiontoggle for %s: %b" channel.String (snd tup).EmotionToggle
+            (snd tup).EmotionToggle
+        | None ->
+            Logger.Log.TraceWarn <| sprintf "Check channel emotiontoggle for %s: No found" channel.String
+            false
 
     let checkPrefixChannel channel =
         Array.tryFind (fun (elem: (Channels * CacheChannelSettings)) -> channel = fst elem) cacheChannelSettings
         |> function
-        | Some (tup) -> Ok((snd tup).Prefix)
-        | None -> Error("Not found prefix")
+        | Some (tup) ->
+            //Лог закомментирован, потому что функция вызывается каждое сообщение в чате
+            //Logger.Log.TraceInf <| sprintf "Check channel prefix for %s: %s" channel.String (snd tup).Prefix
+            Ok((snd tup).Prefix)
+        | None ->
+            Logger.Log.TraceWarn <| sprintf "Check channel prefix for %s: No found" channel.String
+            Error("Not found prefix")
 
     let checkLastReactTimeChannel channel =
         Array.tryFind
@@ -1172,14 +1214,14 @@ module private Commands =
                     ({ chCommand = "харакири"
                        chAnswer = harakiri msg })
             Channel = All
-            Ban = [ Reflyq ] }
+            Ban = [ Reflyq ; Kaelia ] }
           { cmdName = [ "рулетка" ]
             Command =
                 lazy
                     ({ chCommand = "рулетка"
                        chAnswer = roulette msg rw })
             Channel = All
-            Ban = [ Kotik; Reflyq ] } ]
+            Ban = [ Kotik; Reflyq; Kaelia ] } ]
 
 
     let rewardList (msgr: MessageRead) (rw: ReaderWriter) =
@@ -1329,9 +1371,9 @@ module Handlers =
         let lineSplit = line.Split("tmi.twitch.tv")
 
         if lineSplit.Length < 2 then
-            Error "Длина массива меньше 2 или нет PRIVMSG"
-        elif not (line.Contains("PRIVMSG")) then
-            Error "нет PRIVMSG"
+            Error "Length of array for parse less then two."
+        elif not <| line.Contains("PRIVMSG") then
+            Error "No PRIVMSG in message. Skip."
         else
             let firstLineSplit = lineSplit.[0].Split(";")
             let secondLineSplit = lineSplit.[1].Split(' ')
@@ -1357,7 +1399,7 @@ module Handlers =
                       RewardCode = Parse.rewardID firstLineSplit }
 
                 msg |> Ok
-            | None -> Error "Неизвестный канал"
+            | None -> Error "Can't resolve channel string"
 
 
     let handleCommands (msgr: MessageRead) (rw: ReaderWriter) =

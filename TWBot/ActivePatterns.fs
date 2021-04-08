@@ -28,6 +28,7 @@ let (|ResolveChannelString|) (channel: string) =
     | "enemycbc" -> Some(Enemy)
     | "lievrefru" -> Some(Lievrefr)
     | "madelineqt" -> Some(Madelinqa)
+    | "kaelia_kael" -> Some(Kaelia)
     | _ -> None
 
 let resolveUser (roomID: string) (user: User) =

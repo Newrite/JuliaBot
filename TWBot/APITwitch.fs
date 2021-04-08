@@ -276,6 +276,7 @@ module IRC =
     let channels = Channels.ToList
     
     let private readerWriter (bot: Bot) =
+        Logger.Log.TraceInf "Get ReaderWriter from Bot connection"
         match bot with
         | Bot (tcp) ->
             { Reader = new System.IO.StreamReader(tcp.GetStream())
@@ -283,58 +284,69 @@ module IRC =
     
     
     let sendMessage (msg: MessageWrite) =
-    
+        Logger.Log.TraceInf "Send message irc"
         if msg.Message.Length >= 1 then
-    
-            printfn "%s"
-            <| sprintf "%s %s" msg.Message msg.Channel.String
+            
+            let msgLog =
+                sprintf "[%s][%A][%s] %s" msg.Channel.String System.DateTime.Now "juliaeternal" msg.Message
+                
+            Logger.LogChat.writePrintBot msgLog msg.Channel
     
             sprintf "PRIVMSG #%s :%s\n\r" msg.Channel.String msg.Message
             |> msg.Writer.WriteLine
     
             msg.Writer.Flush()
-    
-        ()
+        else
+            Logger.Log.TraceWarn "Send message irc. Message less length then two."
     
     let sendRaw (rw: ReaderWriter) (raw: string) =
+        Logger.Log.TraceInf "Send raw irc"
         if raw.Length >= 1 then
-            raw |> printfn "%s"
+            Logger.LogChat.writePrintRaw raw
             rw.Writer.WriteLine(raw)
             rw.Writer.Flush()
-    
-        ()
+        else
+            Logger.Log.TraceWarn "Send raw irc. Raw less length then two."
     
     let readChat (rw: ReaderWriter) =
+        //Закомментировано, вызывается каждую итерацию основного цикла.
+        //Logger.Log.TraceInf "Read chat irc"
         let msg = rw.Reader.ReadLine()
-    
+        //Logger.Log.TraceDeb <| sprintf "readChat getmsg: %s" msg
         if msg.Contains("PING :tmi.twitch.tv") then
-            printfn "%s" <| "PONG :tmi.twitch.tv"
+            Logger.LogChat.writePrintRaw "PING :tmi.twitch.tv"
+            Logger.LogChat.writePrintRaw "PONG :tmi.twitch.tv"
             sendRaw rw "PONG :tmi.twitch.tv"
             msg
         else
             msg
     
     let private initDBChannel (channel: Channels) =
+        Logger.Log.TraceInf <| sprintf "Start initialization database for channel %s" channel.String
         SingleData.DB.createChannelSettingsTable channel
-        |> printfn "createChannelSettingsTable %A"
+        |> sprintf "createChannelSettingsTable %A" |> Logger.Log.TraceDeb
     
         SingleData.DB.createChannelCommandsTable channel
-        |> printfn "createChannelCommandsTable %A"
+        |> sprintf "createChannelCommandsTable %A" |> Logger.Log.TraceDeb
     
     let private initDBBot () =
+        Logger.Log.TraceInf "Start initialization database for bot"
         SingleData.DB.createBotSettingsTable ()
-        |> printfn "%A"
+        |> sprintf "%A" |> Logger.Log.TraceDeb
     
-        Requests.updateAccessToken () |> printfn "%A"
+        Requests.updateAccessToken () |> sprintf "%A" |> Logger.Log.TraceDeb
     
     let private joinChannels (rw: ReaderWriter) (channelsList: Channels list) =
+        Logger.Log.TraceInf <| sprintf "Start join, channels: %A" channelsList
         let rec joinChannel listSize =
             if listSize - 1 < 0 then
+                Logger.Log.TraceInf "Channels in list end."
                 ()
             else
                 let currentSize = listSize - 1
                 let channel = List.item currentSize channelsList
-                initDBChannel channel |> printfn "%A"
+                initDBChannel channel |> sprintf "%A" |> Logger.Log.TraceDeb
+                Logger.Log.TraceDeb <| sprintf "Join to %s" channel.String
     
                 channel.String
                 |> sprintf "JOIN #%s\n\r"
@@ -345,14 +357,18 @@ module IRC =
         joinChannel channelsList.Length
     
     let connection (bot: Bot) =
+        Logger.Log.TraceInf "Start connection irc"
         initDBBot ()
     
         match bot with
         | Bot (tcp) ->
+            Logger.Log.TraceDeb "Connect to twitch server"
             tcp.Connect("irc.chat.twitch.tv", 6667)
             let rw = readerWriter (bot)
+            Logger.Log.TraceDeb "Start all work to init and join channels"
             sendRaw rw (sprintf "PASS %s\n\r" OAuth)
             sendRaw rw (sprintf "NICK %s\n\r" Nickname)
             sendRaw rw (sprintf "%s\n\r" caps)
             joinChannels rw channels
+            Logger.Log.TraceDeb "All work done, return ReaderWriter"
             rw
