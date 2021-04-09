@@ -885,8 +885,21 @@ module private Commands =
                 let sinceTime =
                     DateTime.Now
                     - DateTime.Parse(data.data.[0].started_at)
-
-                sprintf "Стрим длится уже %A" sinceTime
+                let answer =
+                    let days =
+                        match sinceTime.Days with
+                        | day when day > 0 -> sprintf "%dd " day
+                        | _ -> ""
+                    let time since suffix whenValue=
+                        match since with
+                        | sv when whenValue <> "" -> sprintf "%d%s" sv suffix
+                        | sv when sv > 0 -> sprintf "%d%s" sv suffix
+                        | _ -> ""
+                    let hours = time sinceTime.Hours "h " days
+                    let minutes = time sinceTime.Minutes "m " hours
+                    let seconds = time sinceTime.Seconds "s" minutes
+                    days+hours+minutes+seconds
+                sprintf "Стрим длится уже %s." answer
             | Error (_) -> "Стрим офлайн."
         else
             "Стрим офлайн"

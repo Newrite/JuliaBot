@@ -41,7 +41,6 @@ let main argv =
             Log.TraceInf "Start async spamMessageKaelia"
             Log.TraceDeb <| sprintf "spamMessageKaelia %s sleepMin %d" channel.String minutes
             let mutable tempCounter = Bot.Cache.tempKaeliaMessageCounter
-
             while true do
                 Log.TraceInf "sleep spamMessageKaelia..."
                 System.Threading.Thread.Sleep(minute * minutes)
@@ -99,15 +98,16 @@ let main argv =
     Log.TraceInf "Start Async spammers"
     Async.StartAsTask(spamMessageReflyq readerWriter Reflyq 20)
     |> ignore
-    
-    Async.StartAsTask(spamMessageKaelia readerWriter Kaelia 20)
-    |> ignore
-
+    System.Threading.Thread.Sleep(5000)
     Async.StartAsTask(spamMessageXandr readerWriter XandrSH 15)
     |> ignore
-
+    System.Threading.Thread.Sleep(5000)
+    Async.StartAsTask(spamMessageKaelia readerWriter Kaelia 20)
+    |> ignore
+    System.Threading.Thread.Sleep(5000)
     Async.StartAsTask(spamMessageNewrite readerWriter Newrite 30)
     |> ignore
+    System.Threading.Thread.Sleep(5000)
     Log.TraceInf "Start app loop"
         
     while true do
