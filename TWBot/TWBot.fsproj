@@ -27,6 +27,7 @@
         <Compile Include="ActivePatterns.fs" />
         <Compile Include="DataBase.fs" />
         <Compile Include="APITwitch.fs" />
+        <Compile Include="Cache.fs" />
         <Compile Include="Bot.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>

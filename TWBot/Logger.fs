@@ -6,6 +6,9 @@ open System.IO
 open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
 
+let mutable fileNameMain = "logmain.txt"
+let mutable fileNameException = "logexception.txt"
+
 type LogLevel =
     | Error
     | Warning
@@ -61,14 +64,14 @@ module private Log =
     let toWrite (logLevel: LogLevel) (messageToLog: string) =
         if logLevel = LogLevel.Exception then
             use logFile =
-                File.Open("logexception.txt", FileMode.Append)
+                File.Open(fileNameException, FileMode.Append)
 
             use logFileWriter = new StreamWriter(logFile)
             logFileWriter.WriteLine(messageToLog)
             logFileWriter.Flush()
         else
             use logFile =
-                File.Open("logmain.txt", FileMode.Append)
+                File.Open(fileNameMain, FileMode.Append)
 
             use logFileWriter = new StreamWriter(logFile)
             logFileWriter.WriteLine(messageToLog)

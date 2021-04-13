@@ -18,21 +18,21 @@ let main argv =
         async {
             Log.TraceInf "Start async spamMessageReflyq"
             Log.TraceDeb <| sprintf "spamMessageReflyq %s sleepMin %d" channel.String minutes
-            let mutable tempCounter = Bot.Cache.tempReflyqMessageCounter
+            let mutable tempCounter = Cache.tempReflyqMessageCounter
             while true do
                 Log.TraceInf "sleep spamMessageReflyq..."
                 System.Threading.Thread.Sleep(minute * minutes)
                 Log.TraceInf "wakeup spamMessageReflyq, start checkOnline"
                 Log.TraceDeb
-                <| sprintf "spamMessageReflyq counter message tc %d cache %d" tempCounter Bot.Cache.tempReflyqMessageCounter
-                if APITwitch.Requests.checkOnline channel && (Bot.Cache.tempReflyqMessageCounter - tempCounter) >= 20 then
+                <| sprintf "spamMessageReflyq counter message tc %d cache %d" tempCounter Cache.tempReflyqMessageCounter
+                if APITwitch.Requests.checkOnline channel && (Cache.tempReflyqMessageCounter - tempCounter) >= 20 then
                     Log.TraceInf "spamMessageReflyq, start message"
                     APITwitch.IRC.sendRaw
                         rw
                         (sprintf
                             "PRIVMSG #%s :https://discord.gg/BvRarMSpm3 анонсы стримов тут, в будущем возможно появится, что то еще Agakakskagesh\n\r"
                             channel.String)
-                    tempCounter <- Bot.Cache.tempReflyqMessageCounter
+                    tempCounter <- Cache.tempReflyqMessageCounter
                     Log.TraceDeb <| sprintf "spamMessageReflyq, new tempCounter %d" tempCounter
         }
         
@@ -40,21 +40,21 @@ let main argv =
         async {
             Log.TraceInf "Start async spamMessageKaelia"
             Log.TraceDeb <| sprintf "spamMessageKaelia %s sleepMin %d" channel.String minutes
-            let mutable tempCounter = Bot.Cache.tempKaeliaMessageCounter
+            let mutable tempCounter = Cache.tempKaeliaMessageCounter
             while true do
                 Log.TraceInf "sleep spamMessageKaelia..."
                 System.Threading.Thread.Sleep(minute * minutes)
                 Log.TraceInf "wakeup spamMessageKaelia, start checkOnline"
                 Log.TraceDeb
-                <| sprintf "spamMessageKaelia counter message tc %d cache %d" tempCounter Bot.Cache.tempKaeliaMessageCounter
-                if APITwitch.Requests.checkOnline channel && (Bot.Cache.tempKaeliaMessageCounter - tempCounter) >= 20 then
+                <| sprintf "spamMessageKaelia counter message tc %d cache %d" tempCounter Cache.tempKaeliaMessageCounter
+                if APITwitch.Requests.checkOnline channel && (Cache.tempKaeliaMessageCounter - tempCounter) >= 20 then
                     Log.TraceInf "spamMessageKaelia, start message"
                     APITwitch.IRC.sendRaw
                         rw
                         (sprintf
                             "PRIVMSG #%s :Чтобы быть в курсе свежих новостей и знать, когда новая подрубка: https://discord.gg/K9KRxvRkxq\n\r"
                             channel.String)
-                    tempCounter <- Bot.Cache.tempKaeliaMessageCounter
+                    tempCounter <- Cache.tempKaeliaMessageCounter
                     Log.TraceDeb <| sprintf "spamMessageKaelia, new tempCounter %d" tempCounter
         }
 
@@ -94,7 +94,7 @@ let main argv =
         }
     Log.TraceInf "Start initCache for channels"
     Log.TraceDeb <| sprintf "initCache channels %A" APITwitch.IRC.channels
-    Bot.Cache.initCache APITwitch.IRC.channels APITwitch.IRC.channels.Length
+    Cache.initCache APITwitch.IRC.channels APITwitch.IRC.channels.Length
     Log.TraceInf "Start Async spammers"
     Async.StartAsTask(spamMessageReflyq readerWriter Reflyq 20)
     |> ignore
@@ -116,15 +116,15 @@ let main argv =
         |> function
         | Ok (msgr) ->
             match msgr.Channel with
-            | Reflyq -> Bot.Cache.tempReflyqMessageCounter <- Bot.Cache.tempReflyqMessageCounter + 1
-            | Kaelia -> Bot.Cache.tempKaeliaMessageCounter <- Bot.Cache.tempKaeliaMessageCounter + 1
+            | Reflyq -> Cache.tempReflyqMessageCounter <- Cache.tempReflyqMessageCounter + 1
+            | Kaelia -> Cache.tempKaeliaMessageCounter <- Cache.tempKaeliaMessageCounter + 1
             | _ -> ()
             Bot.Handlers.handleCache msgr readerWriter
             Bot.Handlers.handleMasterCommands msgr readerWriter
             
             LogChat.writePrint msgr
 
-            match Bot.Cache.checkToggleChannel msgr.Channel with
+            match Cache.checkToggleChannel msgr.Channel with
             | true ->
                 Bot.Handlers.handleHelper msgr readerWriter
                 Bot.Handlers.handleReacts msgr readerWriter
