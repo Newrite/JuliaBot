@@ -64,13 +64,11 @@ module private Utils =
             match chat with
             | Some (ok) ->
                 printfn "%A" ok
-
-                List.tryFind
-                    (fun (elem: string) ->
-                        match nickname with
-                        | Some (nick) -> elem.Contains(nick)
-                        | None -> false)
-                    ok
+                ok
+                |>List.tryFind ^fun (elem: string) ->
+                    match nickname with
+                    | Some (nick) -> elem.Contains(nick)
+                    | None -> false
             | None -> None
 
         APITwitch.Requests.getChatters msgr.Channel
@@ -414,7 +412,9 @@ module private Commands =
                 | Subscriber -> sprintf "Зачем ты это делаешь? roflanZachto"
                 | VIP -> sprintf "Ты ходишь по тонкому льду, випчик.. Ладно живи roflanEbalo"
                 | Unsubscriber ->
-                    APITwitch.IRC.sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s 120\n\r" msgr.Channel.String msgr.User.Name)
+                    APITwitch.IRC.sendRaw
+                        rw
+                        (sprintf "PRIVMSG #%s :/timeout %s 120\n\r" msgr.Channel.String msgr.User.Name)
 
                     sprintf "Я тебя щас нахуй вырублю, ансаб блять НЫА roflanEbalo"
                 | NotFound -> sprintf "/me какая-то непонятная хрень...%s" msgr.User.Name
@@ -585,20 +585,24 @@ module private Commands =
                 let sinceTime =
                     DateTime.Now
                     - DateTime.Parse(data.data.[0].started_at)
+
                 let answer =
                     let days =
                         match sinceTime.Days with
                         | day when day > 0 -> sprintf "%dd " day
                         | _ -> ""
-                    let time since suffix whenValue=
+
+                    let time since suffix whenValue =
                         match since with
                         | sv when whenValue <> "" -> sprintf "%d%s" sv suffix
                         | sv when sv > 0 -> sprintf "%d%s" sv suffix
                         | _ -> ""
+
                     let hours = time sinceTime.Hours "h " days
                     let minutes = time sinceTime.Minutes "m " hours
                     let seconds = time sinceTime.Seconds "s" minutes
-                    days+hours+minutes+seconds
+                    days + hours + minutes + seconds
+
                 sprintf "Стрим длится уже %s." answer
             | Error (_) -> "Стрим офлайн."
         else
@@ -652,7 +656,8 @@ module private Commands =
             let command = splited.[1].ToLower()
 
             let commandAnswer =
-                Array.reduce (fun acc elem -> acc + " " + elem) splited.[2..]
+                splited.[2..]
+                |>Array.reduce ^ fun acc elem -> acc + " " + elem
 
             SingleData.DB.addChannelCommand
                 msgr.Channel
@@ -699,8 +704,9 @@ module private Commands =
         | Ok (list) ->
             if not list.IsEmpty then
                 " Кастомные команды: "
-                + (List.collect (fun elem -> [ elem.chCommand ]) list
-                   |> List.reduce (fun acc elem -> acc + ", " + elem))
+                + (list
+                   |> List.collect ^ fun elem -> [ elem.chCommand ]
+                   |> List.reduce ^ fun acc elem -> acc + ", " + elem)
             else
                 " Список кастомных команд пуст."
         | Error (err) -> err
@@ -721,7 +727,8 @@ module private Commands =
             let command = splited.[1].ToLower()
 
             let commandAnswer =
-                Array.reduce (fun acc elem -> acc + " " + elem) splited.[2..]
+                splited.[2..]
+                |>Array.reduce ^ fun acc elem -> acc + " " + elem
 
             Cache.resolveCommandCache msgr command
             |> function
@@ -927,7 +934,7 @@ module private Commands =
                     ({ chCommand = "харакири"
                        chAnswer = harakiri msg })
             Channel = All
-            Ban = [ Reflyq ; Kaelia ] }
+            Ban = [ Reflyq; Kaelia ] }
           { cmdName = [ "рулетка" ]
             Command =
                 lazy
@@ -947,19 +954,18 @@ module private Parse =
     let resolveCommandList (cmd: string) (msgr: MessageRead) (rw: ReaderWriter) =
         try
             Commands.commandList msgr rw
-            |> List.find
-                (fun elem ->
-                    match elem with
-                    | el when
-                        List.contains cmd el.cmdName
-                        && not (List.contains msgr.Channel el.Ban) ->
-                        match el.Channel with
-                        | All -> true
-                        | Channel (ch) -> ch = msgr.Channel
-                        | ChannelList (cl) -> List.contains msgr.Channel cl
-                    | _ -> false)
+            |> List.find ^ fun elem ->
+                match elem with
+                | el when
+                    cmd </> el.cmdName
+                    && not (msgr.Channel </> el.Ban) ->
+                    match el.Channel with
+                    | All -> true
+                    | Channel (ch) -> ch = msgr.Channel
+                    | ChannelList (cl) -> msgr.Channel </> cl
+                | _ -> false
             |> function
-            | com -> Ok(com.Command)
+            | com -> Ok com.Command
         with eX -> Error eX.Message
 
 
@@ -1003,32 +1009,31 @@ module private Parse =
     let displayName (firstLineSplit: string array) =
         let d =
             firstLineSplit
-            |> Array.find (fun elem -> elem.Contains("display-name="))
+            |> Array.find ^ fun elem -> elem.Contains("display-name=")
 
         d.Substring(13)
 
     let userID (firstLineSplit: string array) =
         let d =
             firstLineSplit
-            |> Array.find (fun elem -> elem.Contains("user-id="))
+            |> Array.find ^ fun elem -> elem.Contains("user-id=")
 
         d.Substring(8)
 
     let roomID (firstLineSplit: string array) =
         let d =
             firstLineSplit
-            |> Array.find (fun elem -> elem.Contains("room-id="))
+            |> Array.find ^ fun elem -> elem.Contains("room-id=")
 
         d.Substring(8)
 
     let nickname (firstLineSplit: string array) =
         let d =
             firstLineSplit
-            |> Array.find
-                (fun elem ->
-                    elem.Contains("!")
-                    && elem.Contains(":")
-                    && elem.Contains("."))
+            |> Array.find ^ fun elem ->
+                elem.Contains("!")
+                && elem.Contains(":")
+                && elem.Contains(".")
 
         d.Substring(d.IndexOf(':') + 1, (displayName firstLineSplit).Length)
 
@@ -1036,7 +1041,7 @@ module private Parse =
         try
             let d =
                 firstLineSplit
-                |> Array.find (fun elem -> elem.Contains("custom-reward-id="))
+                |> Array.find ^ fun elem -> elem.Contains("custom-reward-id=")
 
             Some(d.Substring(17))
         with eX -> None
@@ -1044,15 +1049,15 @@ module private Parse =
     let message (secondLineSplit: string array) =
         let d =
             secondLineSplit
-            |> Array.findIndex (fun elem -> elem.Contains(':'))
+            |> Array.findIndex ^ fun elem -> elem.Contains(':')
 
-        (Array.reduce (fun acc elem -> acc + " " + elem) secondLineSplit.[d..]).[1..]
+        (secondLineSplit.[d..] |> Array.reduce ^ fun acc elem -> acc + " " + elem).[1..]
 
 
     let channel (secondLineSplit: string array) =
         let d =
             secondLineSplit
-            |> Array.find (fun elem -> elem.Contains('#'))
+            |> Array.find ^ fun elem -> elem.Contains('#')
 
         d.Substring(1)
 
@@ -1066,11 +1071,12 @@ module private Parse =
             None
 
 module Handlers =
-    
+
     let handleRewards (msgr: MessageRead) (rw: ReaderWriter) =
         match msgr.RewardCode with
         | Some (code) ->
-            List.tryFind (fun (elem: RewardList) -> code = elem.RewardCode) (Commands.rewardList msgr rw)
+            Commands.rewardList msgr rw
+            |>List.tryFind ^ fun (elem: RewardList) -> code = elem.RewardCode
             |> function
             | Some (reward) ->
                 APITwitch.IRC.sendMessage
@@ -1127,7 +1133,7 @@ module Handlers =
     let handleReacts (msgr: MessageRead) (rw: ReaderWriter) =
         if Cache.checkLastReactTimeChannel msgr.Channel
            && Cache.checkEmotionToggleChannel msgr.Channel then
-            match msgr.Message with
+            match msgr with
             | SMOrc react ->
                 Cache.updateLastReactTimeChannel msgr.Channel
 
@@ -1216,24 +1222,25 @@ module Handlers =
                                 ""
 
                         let getCommands =
-                            List.filter
-                                (fun elem ->
-                                    match elem with
-                                    | el when not (List.contains msgr.Channel el.Ban) ->
-                                        match el.Channel with
-                                        | All -> true
-                                        | Channel (ch) -> ch = msgr.Channel
-                                        | ChannelList (cl) -> List.contains msgr.Channel cl
-                                    | _ -> false)
-                                commands
+                            commands
+                            |> List.filter
+                               ^ fun elem ->
+                                   match elem with
+                                   | el when not (List.contains msgr.Channel el.Ban) ->
+                                       match el.Channel with
+                                       | All -> true
+                                       | Channel (ch) -> ch = msgr.Channel
+                                       | ChannelList (cl) -> List.contains msgr.Channel cl
+                                   | _ -> false
 
                         APITwitch.IRC.sendMessage
                             { Channel = msgr.Channel
                               Message =
                                   "Список доступных команд: "
                                   + masterHelper
-                                  + (List.collect (fun (elem: CommandList) -> [ elem.cmdName.Head ]) getCommands
-                                     |> List.reduce (fun acc elem -> acc + ", " + elem))
+                                  + (getCommands
+                                  |> List.collect ^ fun (elem: CommandList) -> [ elem.cmdName.Head ]
+                                  |> List.reduce ^ fun acc elem -> acc + ", " + elem)
                                   + Commands.listCommandDataBase msgr
                               Writer = rw.Writer }
                     | _ -> ()

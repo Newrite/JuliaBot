@@ -175,7 +175,9 @@ let (|TryKillSub|TryKillVIP|TryKillStreamer|TryKillModer|TryKillNill|TryKillUnsu
     | Moderator -> TryKillModer
     | NotFound -> TryKillNill
 
-let (|SMOrc|PogChamp|Greetings|NoReact|) (message: string) =
+let (|SMOrc|PogChamp|Greetings|NoReact|) (msgr: MessageRead) =
+    let message = msgr.Message
+
     if
         message.ToLower().Contains("привет")
         || message.ToLower().Contains("дарова")

@@ -13,62 +13,91 @@ let main argv =
     let readerWriter = APITwitch.IRC.connection b
     Log.TraceInf "Connection complete."
     let minute = 1000 * 60
-    
+
     let spamMessageReflyq (rw: ReaderWriter) (channel: Channels) minutes =
         async {
             Log.TraceInf "Start async spamMessageReflyq"
-            Log.TraceDeb <| sprintf "spamMessageReflyq %s sleepMin %d" channel.String minutes
+
+            Log.TraceDeb
+            <| sprintf "spamMessageReflyq %s sleepMin %d" channel.String minutes
+
             let mutable tempCounter = Cache.tempReflyqMessageCounter
+
             while true do
                 Log.TraceInf "sleep spamMessageReflyq..."
                 System.Threading.Thread.Sleep(minute * minutes)
                 Log.TraceInf "wakeup spamMessageReflyq, start checkOnline"
+
                 Log.TraceDeb
                 <| sprintf "spamMessageReflyq counter message tc %d cache %d" tempCounter Cache.tempReflyqMessageCounter
-                if APITwitch.Requests.checkOnline channel && (Cache.tempReflyqMessageCounter - tempCounter) >= 20 then
+
+                if APITwitch.Requests.checkOnline channel
+                   && (Cache.tempReflyqMessageCounter - tempCounter)
+                      >= 20 then
                     Log.TraceInf "spamMessageReflyq, start message"
+
                     APITwitch.IRC.sendRaw
                         rw
                         (sprintf
                             "PRIVMSG #%s :https://discord.gg/BvRarMSpm3 анонсы стримов тут, в будущем возможно появится, что то еще Agakakskagesh\n\r"
                             channel.String)
+
                     tempCounter <- Cache.tempReflyqMessageCounter
-                    Log.TraceDeb <| sprintf "spamMessageReflyq, new tempCounter %d" tempCounter
+
+                    Log.TraceDeb
+                    <| sprintf "spamMessageReflyq, new tempCounter %d" tempCounter
         }
-        
+
     let spamMessageKaelia (rw: ReaderWriter) (channel: Channels) minutes =
         async {
             Log.TraceInf "Start async spamMessageKaelia"
-            Log.TraceDeb <| sprintf "spamMessageKaelia %s sleepMin %d" channel.String minutes
+
+            Log.TraceDeb
+            <| sprintf "spamMessageKaelia %s sleepMin %d" channel.String minutes
+
             let mutable tempCounter = Cache.tempKaeliaMessageCounter
+
             while true do
                 Log.TraceInf "sleep spamMessageKaelia..."
                 System.Threading.Thread.Sleep(minute * minutes)
                 Log.TraceInf "wakeup spamMessageKaelia, start checkOnline"
+
                 Log.TraceDeb
                 <| sprintf "spamMessageKaelia counter message tc %d cache %d" tempCounter Cache.tempKaeliaMessageCounter
-                if APITwitch.Requests.checkOnline channel && (Cache.tempKaeliaMessageCounter - tempCounter) >= 20 then
+
+                if APITwitch.Requests.checkOnline channel
+                   && (Cache.tempKaeliaMessageCounter - tempCounter)
+                      >= 20 then
                     Log.TraceInf "spamMessageKaelia, start message"
+
                     APITwitch.IRC.sendRaw
                         rw
                         (sprintf
                             "PRIVMSG #%s :Чтобы быть в курсе свежих новостей и знать, когда новая подрубка: https://discord.gg/K9KRxvRkxq\n\r"
                             channel.String)
+
                     tempCounter <- Cache.tempKaeliaMessageCounter
-                    Log.TraceDeb <| sprintf "spamMessageKaelia, new tempCounter %d" tempCounter
+
+                    Log.TraceDeb
+                    <| sprintf "spamMessageKaelia, new tempCounter %d" tempCounter
         }
 
     let spamMessageXandr (rw: ReaderWriter) (channel: Channels) minutes =
-        
+
         async {
             Log.TraceInf "Start async spamMessageXandr"
-            Log.TraceDeb <| sprintf "spamMessageXandr %s sleepMin %d" channel.String minutes
+
+            Log.TraceDeb
+            <| sprintf "spamMessageXandr %s sleepMin %d" channel.String minutes
+
             while true do
                 Log.TraceInf "sleep spamMessageXandr..."
                 System.Threading.Thread.Sleep(minute * minutes)
                 Log.TraceInf "wakeup spamMessageXandr, start checkOnline"
+
                 if APITwitch.Requests.checkOnline channel then
                     Log.TraceInf "spamMessageXandr, start message"
+
                     APITwitch.IRC.sendRaw
                         rw
                         (sprintf
@@ -79,37 +108,54 @@ let main argv =
     let spamMessageNewrite (rw: ReaderWriter) (channel: Channels) minutes =
         async {
             Log.TraceInf "Start async spamMessageNewrite"
-            Log.TraceDeb <| sprintf "spamMessageNewrite %s sleepMin %d" channel.String minutes
+
+            Log.TraceDeb
+            <| sprintf "spamMessageNewrite %s sleepMin %d" channel.String minutes
+
             while true do
                 Log.TraceInf "sleep spamMessageNewrite..."
                 System.Threading.Thread.Sleep(minute * minutes)
                 Log.TraceInf "wakeup spamMessageNewrite, start checkOnline"
+
                 if APITwitch.Requests.checkOnline channel then
                     Log.TraceInf "spamMessageNewrite, start message"
+
                     APITwitch.IRC.sendRaw
                         rw
                         (sprintf
                             "PRIVMSG #%s :Стримы спонтанны, неизвестно когда будут Kappa Анонсы и всякое по моддингу скайрима здесь: https://discord.gg/RbJPhEU2eR\n\r"
                             channel.String)
         }
+
     Log.TraceInf "Start initCache for channels"
-    Log.TraceDeb <| sprintf "initCache channels %A" APITwitch.IRC.channels
+
+    Log.TraceDeb
+    <| sprintf "initCache channels %A" APITwitch.IRC.channels
+
     Cache.initCache APITwitch.IRC.channels APITwitch.IRC.channels.Length
     Log.TraceInf "Start Async spammers"
+
     Async.StartAsTask(spamMessageReflyq readerWriter Reflyq 20)
     |> ignore
+
     System.Threading.Thread.Sleep(5000)
+
     Async.StartAsTask(spamMessageXandr readerWriter XandrSH 15)
     |> ignore
+
     System.Threading.Thread.Sleep(5000)
+
     Async.StartAsTask(spamMessageKaelia readerWriter Kaelia 20)
     |> ignore
+
     System.Threading.Thread.Sleep(5000)
+
     Async.StartAsTask(spamMessageNewrite readerWriter Newrite 30)
     |> ignore
+
     System.Threading.Thread.Sleep(5000)
     Log.TraceInf "Start app loop"
-        
+
     while true do
         APITwitch.IRC.readChat readerWriter
         |> Bot.Handlers.handleLine
@@ -119,9 +165,10 @@ let main argv =
             | Reflyq -> Cache.tempReflyqMessageCounter <- Cache.tempReflyqMessageCounter + 1
             | Kaelia -> Cache.tempKaeliaMessageCounter <- Cache.tempKaeliaMessageCounter + 1
             | _ -> ()
+
             Bot.Handlers.handleCache msgr readerWriter
             Bot.Handlers.handleMasterCommands msgr readerWriter
-            
+
             LogChat.writePrint msgr
 
             match Cache.checkToggleChannel msgr.Channel with
@@ -131,7 +178,9 @@ let main argv =
                 Bot.Handlers.handleCommands msgr readerWriter
                 Bot.Handlers.handleRewards msgr readerWriter
             | false -> ()
-        | Microsoft.FSharp.Core.Error (err) -> Log.TraceWarn <| sprintf "Something wrong with parse line err: %s" err
+        | Error (err) ->
+            Log.TraceWarn
+            <| sprintf "Something wrong with parse line err: %s" err
 
         System.Threading.Thread.Sleep(10)
 

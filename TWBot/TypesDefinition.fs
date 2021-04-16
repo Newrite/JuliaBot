@@ -1,6 +1,17 @@
 ﻿module TWBot.TypesDefinition
 
 
+let inline (^) f x = f x
+
+let inline (</>) (a: 'a) (al: 'a seq) =
+    al
+    |>Seq.contains a
+    
+type System.Object with
+    member inline this.In al =
+        al
+        |>Seq.contains (this :?> 'a)
+
 //Типы в основном под базу данных
 type ChannelSettings =
     | Prefix
