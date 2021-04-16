@@ -64,11 +64,13 @@ module private Utils =
             match chat with
             | Some (ok) ->
                 printfn "%A" ok
+
                 ok
-                |>List.tryFind ^fun (elem: string) ->
-                    match nickname with
-                    | Some (nick) -> elem.Contains(nick)
-                    | None -> false
+                |> List.tryFind
+                   ^ fun (elem: string) ->
+                       match nickname with
+                       | Some (nick) -> elem.Contains(nick)
+                       | None -> false
             | None -> None
 
         APITwitch.Requests.getChatters msgr.Channel
@@ -657,7 +659,7 @@ module private Commands =
 
             let commandAnswer =
                 splited.[2..]
-                |>Array.reduce ^ fun acc elem -> acc + " " + elem
+                |> Array.reduce ^ fun acc elem -> acc + " " + elem
 
             SingleData.DB.addChannelCommand
                 msgr.Channel
@@ -728,7 +730,7 @@ module private Commands =
 
             let commandAnswer =
                 splited.[2..]
-                |>Array.reduce ^ fun acc elem -> acc + " " + elem
+                |> Array.reduce ^ fun acc elem -> acc + " " + elem
 
             Cache.resolveCommandCache msgr command
             |> function
@@ -954,16 +956,17 @@ module private Parse =
     let resolveCommandList (cmd: string) (msgr: MessageRead) (rw: ReaderWriter) =
         try
             Commands.commandList msgr rw
-            |> List.find ^ fun elem ->
-                match elem with
-                | el when
-                    cmd </> el.cmdName
-                    && not (msgr.Channel </> el.Ban) ->
-                    match el.Channel with
-                    | All -> true
-                    | Channel (ch) -> ch = msgr.Channel
-                    | ChannelList (cl) -> msgr.Channel </> cl
-                | _ -> false
+            |> List.find
+               ^ fun elem ->
+                   match elem with
+                   | el when
+                       cmd </> el.cmdName
+                       && not (msgr.Channel </> el.Ban) ->
+                       match el.Channel with
+                       | All -> true
+                       | Channel (ch) -> ch = msgr.Channel
+                       | ChannelList (cl) -> msgr.Channel </> cl
+                   | _ -> false
             |> function
             | com -> Ok com.Command
         with eX -> Error eX.Message
@@ -1009,7 +1012,8 @@ module private Parse =
     let displayName (firstLineSplit: string array) =
         let d =
             firstLineSplit
-            |> Array.find ^ fun elem -> elem.Contains("display-name=")
+            |> Array.find
+               ^ fun elem -> elem.Contains("display-name=")
 
         d.Substring(13)
 
@@ -1030,10 +1034,11 @@ module private Parse =
     let nickname (firstLineSplit: string array) =
         let d =
             firstLineSplit
-            |> Array.find ^ fun elem ->
-                elem.Contains("!")
-                && elem.Contains(":")
-                && elem.Contains(".")
+            |> Array.find
+               ^ fun elem ->
+                   elem.Contains("!")
+                   && elem.Contains(":")
+                   && elem.Contains(".")
 
         d.Substring(d.IndexOf(':') + 1, (displayName firstLineSplit).Length)
 
@@ -1041,7 +1046,8 @@ module private Parse =
         try
             let d =
                 firstLineSplit
-                |> Array.find ^ fun elem -> elem.Contains("custom-reward-id=")
+                |> Array.find
+                   ^ fun elem -> elem.Contains("custom-reward-id=")
 
             Some(d.Substring(17))
         with eX -> None
@@ -1051,7 +1057,8 @@ module private Parse =
             secondLineSplit
             |> Array.findIndex ^ fun elem -> elem.Contains(':')
 
-        (secondLineSplit.[d..] |> Array.reduce ^ fun acc elem -> acc + " " + elem).[1..]
+        (((secondLineSplit.[d..]
+           |> Array.reduce ^ fun acc elem -> acc + " " + elem))).[1..]
 
 
     let channel (secondLineSplit: string array) =
@@ -1076,7 +1083,8 @@ module Handlers =
         match msgr.RewardCode with
         | Some (code) ->
             Commands.rewardList msgr rw
-            |>List.tryFind ^ fun (elem: RewardList) -> code = elem.RewardCode
+            |> List.tryFind
+               ^ fun (elem: RewardList) -> code = elem.RewardCode
             |> function
             | Some (reward) ->
                 APITwitch.IRC.sendMessage
@@ -1239,8 +1247,9 @@ module Handlers =
                                   "Список доступных команд: "
                                   + masterHelper
                                   + (getCommands
-                                  |> List.collect ^ fun (elem: CommandList) -> [ elem.cmdName.Head ]
-                                  |> List.reduce ^ fun acc elem -> acc + ", " + elem)
+                                     |> List.collect
+                                        ^ fun (elem: CommandList) -> [ elem.cmdName.Head ]
+                                     |> List.reduce ^ fun acc elem -> acc + ", " + elem)
                                   + Commands.listCommandDataBase msgr
                               Writer = rw.Writer }
                     | _ -> ()

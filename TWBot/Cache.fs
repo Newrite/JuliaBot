@@ -20,9 +20,10 @@ let updateCacheChannelSettings (channel: Channels) =
     <| sprintf "Update cache channel settings for %s" channel.String
 
     Logger.Log.TraceDeb
-    <| sprintf "Old settings %A" ^ fun () ->
-        cacheChannelSettings
-        |>Array.tryFind ^ fun elem -> fst elem = channel
+    <| sprintf "Old settings %A"
+       ^ fun () ->
+           cacheChannelSettings
+           |> Array.tryFind ^ fun elem -> fst elem = channel
 
     let prefix =
         SingleData.DB.getChannelSetting channel ChannelSettings.Prefix
@@ -50,7 +51,7 @@ let updateCacheChannelSettings (channel: Channels) =
 
     cacheChannelSettings <-
         cacheChannelSettings
-        |>Array.filter ^ fun elem -> fst elem <> channel
+        |> Array.filter ^ fun elem -> fst elem <> channel
 
     cacheChannelSettings <-
         Array.append
@@ -65,9 +66,10 @@ let updateCacheChannelSettings (channel: Channels) =
     Logger.Log.TraceInf "Update cache channel settings complete"
 
     Logger.Log.TraceDeb
-    <| sprintf "New settings %A" ^ fun () ->
-    cacheChannelSettings
-    |>Array.find ^ fun elem -> fst elem = channel
+    <| sprintf "New settings %A"
+       ^ fun () ->
+           cacheChannelSettings
+           |> Array.find ^ fun elem -> fst elem = channel
 
 let addCacheChannelCommands (channel: Channels) =
     Logger.Log.TraceInf
@@ -96,7 +98,8 @@ let updateCacheChannelCommands (channel: Channels) =
 
         cacheChannelCommands <-
             cacheChannelCommands
-            |>Array.filter ^ fun (elem: CacheChannelCommands) -> fst elem.ListCMD <> channel
+            |> Array.filter
+               ^ fun (elem: CacheChannelCommands) -> fst elem.ListCMD <> channel
 
         cacheChannelCommands <- Array.append cacheChannelCommands [| { ListCMD = (channel, commands) } |]
     | Error (err) ->
@@ -110,7 +113,10 @@ let checkCacheLove loverName lovedName =
     <| sprintf "checkCacheLove lover: %s loved: %s" loverName lovedName
 
     cacheLovers
-    |>Array.tryFind ^ fun (elem: CacheLove) -> elem.LovedName = lovedName && elem.LoverName = loverName
+    |> Array.tryFind
+       ^ fun (elem: CacheLove) ->
+           elem.LovedName = lovedName
+           && elem.LoverName = loverName
 
 let addCacheLove loverName lovedName percentLove =
     Logger.Log.TraceInf "Start add cache love"
@@ -123,11 +129,10 @@ let addCacheLove loverName lovedName percentLove =
     | None ->
         cacheLovers <-
             cacheLovers
-            |>Array.append
-                [| { LoverName = loverName
-                     LovedName = lovedName
-                     TimeWhen = (DateTime.Now.Ticks / 10000000L)
-                     PercentLove = percentLove } |]
+            |> Array.append [| { LoverName = loverName
+                                 LovedName = lovedName
+                                 TimeWhen = (DateTime.Now.Ticks / 10000000L)
+                                 PercentLove = percentLove } |]
 
         Logger.Log.TraceInf "Lovers added to cache"
     | _ -> Logger.Log.TraceInf "Lovers already in cache"
@@ -135,20 +140,22 @@ let addCacheLove loverName lovedName percentLove =
 let handleCacheLove () =
     cacheLovers <-
         cacheLovers
-        |>Array.filter ^ fun (elem: CacheLove) ->
-            if ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < 86400L then
-                Logger.Log.TraceInf "Proc filter hanlder cache love"
+        |> Array.filter
+           ^ fun (elem: CacheLove) ->
+               if ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < 86400L then
+                   Logger.Log.TraceInf "Proc filter hanlder cache love"
 
-                Logger.Log.TraceInf
-                <| sprintf "handleCacheLove elem: %A" elem
+                   Logger.Log.TraceInf
+                   <| sprintf "handleCacheLove elem: %A" elem
 
-                true
-            else
-                false
+                   true
+               else
+                   false
 
 let checkToggleChannel channel =
     cacheChannelSettings
-    |> Array.tryFind ^ fun (elem: Channels * CacheChannelSettings) -> channel = fst elem
+    |> Array.tryFind
+       ^ fun (elem: Channels * CacheChannelSettings) -> channel = fst elem
     |> function
     | Some (tup) ->
         //Лог закомментирован, потому что функция вызывается каждую итерацию основного цикла
@@ -162,7 +169,8 @@ let checkToggleChannel channel =
 
 let checkEmotionToggleChannel channel =
     cacheChannelSettings
-    |>Array.tryFind ^ fun (elem: Channels * CacheChannelSettings) -> channel = fst elem
+    |> Array.tryFind
+       ^ fun (elem: Channels * CacheChannelSettings) -> channel = fst elem
     |> function
     | Some (tup) ->
         //Лог закомментирован, потому что функция вызывается каждую итерацию основного цикла
@@ -176,7 +184,8 @@ let checkEmotionToggleChannel channel =
 
 let checkPrefixChannel channel =
     cacheChannelSettings
-    |>Array.tryFind ^ fun (elem: Channels * CacheChannelSettings) -> channel = fst elem
+    |> Array.tryFind
+       ^ fun (elem: Channels * CacheChannelSettings) -> channel = fst elem
     |> function
     | Some (tup) ->
         //Лог закомментирован, потому что функция вызывается каждое сообщение в чате
@@ -190,16 +199,21 @@ let checkPrefixChannel channel =
 
 let checkLastReactTimeChannel channel =
     cacheChannelSettings
-    |>Array.tryFind ^ fun (elem: Channels * CacheChannelSettings) ->
-        let settings = snd elem
-        ((DateTime.Now.Ticks / 10000000L) - settings.LastReactTime) > settings.EmotionCoolDown && channel = fst elem
+    |> Array.tryFind
+       ^ fun (elem: Channels * CacheChannelSettings) ->
+           let settings = snd elem
+
+           ((DateTime.Now.Ticks / 10000000L)
+            - settings.LastReactTime) > settings.EmotionCoolDown
+           && channel = fst elem
     |> function
     | Some (_) -> true
     | None -> false
 
 let updateLastReactTimeChannel channel =
     cacheChannelSettings
-    |>Array.tryFind ^ fun (elem: Channels * CacheChannelSettings) -> channel = fst elem
+    |> Array.tryFind
+       ^ fun (elem: Channels * CacheChannelSettings) -> channel = fst elem
     |> function
     | Some (ok) ->
         let settings =
@@ -208,64 +222,73 @@ let updateLastReactTimeChannel channel =
 
         cacheChannelSettings <-
             cacheChannelSettings
-            |>Array.filter ^ fun elem -> fst elem <> channel
-            |>Array.append [| (channel, settings) |]
+            |> Array.filter ^ fun elem -> fst elem <> channel
+            |> Array.append [| (channel, settings) |]
     | None -> ()
 
 let handleCacheUsers (msgr: MessageRead) =
     cacheUsers
-    |>Array.tryFind ^ fun (elem: CacheUser) ->
-        elem.User = msgr.User && elem.Channel = msgr.Channel
+    |> Array.tryFind
+       ^ fun (elem: CacheUser) ->
+           elem.User = msgr.User
+           && elem.Channel = msgr.Channel
     |> function
     | None ->
         cacheUsers <-
             cacheUsers
-            |>Array.filter ^ fun (elem: CacheUser) ->
-                not (elem.User = msgr.User && elem.Channel = msgr.Channel)
-            |>Array.append
-                [| { Channel = msgr.Channel
-                     User = msgr.User } |]
+            |> Array.filter
+               ^ fun (elem: CacheUser) ->
+                   not (
+                       elem.User = msgr.User
+                       && elem.Channel = msgr.Channel
+                   )
+            |> Array.append [| { Channel = msgr.Channel
+                                 User = msgr.User } |]
     | _ -> ()
 
 let handleCacheCatDown () =
     cacheCutDown <-
         cacheCutDown
-        |>Array.filter ^ fun (elem: CacheCatDown) ->
-            ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLongCantKill
+        |> Array.filter
+           ^ fun (elem: CacheCatDown) -> ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLongCantKill
 
 let handleCacheCatDownReward (rw: ReaderWriter) =
     cacheCutDownReward <-
         cacheCutDownReward
-        |>Array.filter ^ fun (elem: CacheCatDownReward) ->
-            if ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLong then
-                true
-            else
-                rw.Writer.WriteLine(sprintf "PRIVMSG #%s :/untimeout %s" elem.Channel.String elem.WhoKilled)
-                rw.Writer.Flush()
-                false
+        |> Array.filter
+           ^ fun (elem: CacheCatDownReward) ->
+               if ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLong then
+                   true
+               else
+                   rw.Writer.WriteLine(sprintf "PRIVMSG #%s :/untimeout %s" elem.Channel.String elem.WhoKilled)
+                   rw.Writer.Flush()
+                   false
 
 let checkCacheCatDownKill whoKill (channel: Channels) =
     cacheCutDown
-    |>Array.tryFind ^ fun (elem: CacheCatDown) ->
-        elem.WhoKill = whoKill && elem.Channel = channel
+    |> Array.tryFind
+       ^ fun (elem: CacheCatDown) -> elem.WhoKill = whoKill && elem.Channel = channel
     |> function
     | Some (_) -> true
     | None -> false
 
 let checkCacheCatDownKilled whoKilled (channel: Channels) =
     cacheCutDown
-    |>Array.tryFind ^ fun (elem: CacheCatDown) ->
-        elem.WhoKilled = whoKilled
-        && elem.Channel = channel
-        && ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLongKilled
+    |> Array.tryFind
+       ^ fun (elem: CacheCatDown) ->
+           elem.WhoKilled = whoKilled
+           && elem.Channel = channel
+           && ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLongKilled
     |> function
     | Some (_) -> true
     | None -> false
 
 let checkCacheCatDownRewardKilled whoKilled (channel: Channels) =
     cacheCutDownReward
-    |>Array.tryFind ^ fun (elem: CacheCatDownReward) ->
-        elem.WhoKilled = whoKilled && elem.Channel = channel
+    |> Array.tryFind
+       ^ fun (elem: CacheCatDownReward) ->
+           elem.WhoKilled = whoKilled
+           && elem.Channel = channel
     |> function
     | Some (_) -> true
     | None -> false
@@ -289,25 +312,29 @@ let addCacheCatDownReward (cutDownReward: CacheCatDownReward) =
 let resolveCommandCache (msgr: MessageRead) cmd =
     Logger.Log.TraceInf
     <| sprintf "Start resolve CommandCache "
+
     cacheChannelCommands
-    |>Array.tryFind ^ fun (elem: CacheChannelCommands) -> msgr.Channel = fst elem.ListCMD
+    |> Array.tryFind
+       ^ fun (elem: CacheChannelCommands) -> msgr.Channel = fst elem.ListCMD
     |> function
     | Some (list) ->
         Logger.Log.TraceInf
         <| sprintf "Get list of commands "
-        
+
         snd list.ListCMD
-        |>List.tryFind ^ fun (elem: ChannelCommand) -> elem.chCommand = cmd
+        |> List.tryFind
+           ^ fun (elem: ChannelCommand) -> elem.chCommand = cmd
     | None -> None
 
 let userFromCache nickname (msgr: MessageRead) =
     cacheUsers
-    |>Array.tryFind ^ fun (elem: CacheUser) ->
-        match nickname with
-        | Some (nick) ->
-            elem.User.Name = nick
-            && msgr.Channel = elem.Channel
-        | None -> false
+    |> Array.tryFind
+       ^ fun (elem: CacheUser) ->
+           match nickname with
+           | Some (nick) ->
+               elem.User.Name = nick
+               && msgr.Channel = elem.Channel
+           | None -> false
 
 let rec initCache (channelsList: Channels list) listSize =
     if listSize - 1 < 0 then
