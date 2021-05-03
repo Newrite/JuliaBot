@@ -63,26 +63,36 @@ module LogChat =
 
 module private Log =
 
-    let toWrite (logLevel: LogLevel) (messageToLog: string) =
+    let toWrite (logLevel: LogLevel) (messageToLog: string) nameMain nameEx =
         if logLevel = LogLevel.ExceptionL then
             use logFile =
-                File.Open(fileNameException, FileMode.Append)
+                File.Open(nameEx, FileMode.Append)
 
             use logFileWriter = new StreamWriter(logFile)
             logFileWriter.WriteLine(messageToLog)
             logFileWriter.Flush()
         else
-            use logFile = File.Open(fileNameMain, FileMode.Append)
+            use logFile = File.Open(nameMain, FileMode.Append)
 
             use logFileWriter = new StreamWriter(logFile)
             logFileWriter.WriteLine(messageToLog)
             logFileWriter.Flush()
 
-    let WritePrint (logLevel: LogLevel) messageToLog =
+    let WritePrint (logLevel: LogLevel) messageToLog nameMain nameEx =
         printfn "%s" messageToLog
-        toWrite logLevel messageToLog
+        toWrite logLevel messageToLog nameMain nameEx
+        
 
 type Log() =
+    
+    static let mutable m_logFileName = "logmain.txt"
+    
+    static let mutable m_logFileEx = "logexception.txt"
+    
+    static member logFileName with set(name) = m_logFileName <- name
+    
+    static member logFileEx with set(name) = m_logFileEx <- name
+    
     static member TraceWarn
         (
             message: string,
@@ -95,7 +105,7 @@ type Log() =
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
-        Log.WritePrint logLevel finalMessage
+        Log.WritePrint logLevel finalMessage m_logFileName m_logFileEx
 
     static member TraceErr
         (
@@ -109,7 +119,7 @@ type Log() =
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
-        Log.WritePrint logLevel finalMessage
+        Log.WritePrint logLevel finalMessage m_logFileName m_logFileEx
 
     static member TraceExc
         (
@@ -123,7 +133,7 @@ type Log() =
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
-        Log.WritePrint logLevel finalMessage
+        Log.WritePrint logLevel finalMessage m_logFileName m_logFileEx
 
     static member TraceInf
         (
@@ -137,7 +147,7 @@ type Log() =
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
-        Log.WritePrint logLevel finalMessage
+        Log.WritePrint logLevel finalMessage m_logFileName m_logFileEx
 
     static member TraceDeb
         (
@@ -151,4 +161,7 @@ type Log() =
         let finalMessage =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
-        Log.WritePrint logLevel finalMessage
+        Log.WritePrint logLevel finalMessage m_logFileName m_logFileEx
+        
+        
+

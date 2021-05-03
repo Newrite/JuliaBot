@@ -5,6 +5,22 @@ open TWBot
 open System
 open TypesDefinition
 open DataBase
+open System.Collections.Generic
+
+let private memoize(f: 'a -> 'b) (filter: Dictionary<'a, 'b> -> unit) =
+    let dict = new Dictionary<'a, 'b>()
+    
+    let memoizedFunc (input: 'a) =
+        filter dict
+        match dict.TryGetValue(input) with
+        |true, x -> x
+        |false, _ ->
+            let answer = f input
+            dict.Add(input, answer)
+            answer
+            
+    memoizedFunc
+    
 
 let mutable tempReflyqMessageCounter = 0
 let mutable tempKaeliaMessageCounter = 0
@@ -18,7 +34,6 @@ let mutable cacheChannelCommands : CacheChannelCommands array = Array.empty
 let updateCacheChannelSettings (channel: Channels) =
     Logger.Log.TraceInf
     <| sprintf "Update cache channel settings for %s" channel.String
-
     Logger.Log.TraceDeb
     <| sprintf "Old settings %A"
        ^ fun () ->

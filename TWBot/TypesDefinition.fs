@@ -58,9 +58,7 @@ type Channels =
         | Cryo -> "cryo_0"
         | Madelinqa -> "madelineqt"
         | Kaelia -> "kaelia_kael"
-
-module Channels =
-    let ToList =
+    static member ToList =
         [ Reflyq
           Newrite
           Kotik
