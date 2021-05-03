@@ -65,8 +65,7 @@ module private Log =
 
     let toWrite (logLevel: LogLevel) (messageToLog: string) nameMain nameEx =
         if logLevel = LogLevel.ExceptionL then
-            use logFile =
-                File.Open(nameEx, FileMode.Append)
+            use logFile = File.Open(nameEx, FileMode.Append)
 
             use logFileWriter = new StreamWriter(logFile)
             logFileWriter.WriteLine(messageToLog)
@@ -81,18 +80,20 @@ module private Log =
     let WritePrint (logLevel: LogLevel) messageToLog nameMain nameEx =
         printfn "%s" messageToLog
         toWrite logLevel messageToLog nameMain nameEx
-        
+
 
 type Log() =
-    
+
     static let mutable m_logFileName = "logmain.txt"
-    
+
     static let mutable m_logFileEx = "logexception.txt"
-    
-    static member logFileName with set(name) = m_logFileName <- name
-    
-    static member logFileEx with set(name) = m_logFileEx <- name
-    
+
+    static member logFileName
+        with set (name) = m_logFileName <- name
+
+    static member logFileEx
+        with set (name) = m_logFileEx <- name
+
     static member TraceWarn
         (
             message: string,
@@ -162,6 +163,3 @@ type Log() =
             sprintf "[%s][%A]%s %s... %s" logLevel.String DateTime.Now path (string line) message
 
         Log.WritePrint logLevel finalMessage m_logFileName m_logFileEx
-        
-        
-

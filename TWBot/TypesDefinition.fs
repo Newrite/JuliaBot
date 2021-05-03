@@ -58,6 +58,7 @@ type Channels =
         | Cryo -> "cryo_0"
         | Madelinqa -> "madelineqt"
         | Kaelia -> "kaelia_kael"
+
     static member ToList =
         [ Reflyq
           Newrite
@@ -82,25 +83,10 @@ type StatusUser =
     | Unsubscriber
     | NotFound
 
-type CutDownAnswer =
-    { AnswFunc: Lazy<unit>
-      Answer: string }
-
 type ChannelOption =
     | Channel of Channels
     | ChannelList of Channels list
     | All
-
-type CommandList =
-    { cmdName: string list
-      Command: Lazy<ChannelCommand>
-      Channel: ChannelOption
-      Ban: Channels list }
-
-type RewardList =
-    { RewardCode: string
-      Command: Lazy<string>
-      Channel: Channels }
 
 type User =
     { Name: string
@@ -127,6 +113,25 @@ type MessageWrite =
     { Channel: Channels
       Message: string
       Writer: System.IO.StreamWriter }
+
+type MessageContext =
+    { MessageRead: MessageRead
+      ReaderWriter: ReaderWriter }
+
+type CommandList =
+    { cmdName: string list
+      Command: MessageContext -> string
+      Channel: ChannelOption
+      Ban: Channels list }
+
+type RewardList =
+    { RewardCode: string
+      Command: MessageContext -> string
+      Channel: Channels }
+
+type CutDownAnswer =
+    { AnswFunc: Lazy<unit>
+      Answer: string }
 
 type Bot = Bot of System.Net.Sockets.TcpClient
 

@@ -213,201 +213,267 @@ module private Commands =
 
         module Answers =
 
-            let private catDownRewardFunction rw (msgr: MessageRead) defendNickname howLongMuted =
+            let private catDownRewardFunction defendNickname howLongMuted (ctx: MessageContext) =
                 APITwitch.IRC.sendRaw
-                    rw
-                    (sprintf "PRIVMSG #%s :/timeout %s %s\n\r" msgr.Channel.String defendNickname howLongMuted)
+                    ctx.ReaderWriter
+                    (sprintf
+                        "PRIVMSG #%s :/timeout %s %s\n\r"
+                        ctx.MessageRead.Channel.String
+                        defendNickname
+                        howLongMuted)
 
                 Cache.addCacheCatDownReward
                     { TimeWhen = Utils.Time()
                       TimeHowLong = Int64.Parse(howLongMuted)
-                      Channel = msgr.Channel
+                      Channel = ctx.MessageRead.Channel
                       WhoKilled = defendNickname }
 
-            let private catDownFunction rw (msgr: MessageRead) defendNickname killer howLongMuted howLongCantUse =
+            let private catDownFunction defendNickname killer howLongMuted howLongCantUse (ctx: MessageContext) =
                 APITwitch.IRC.sendRaw
-                    rw
-                    (sprintf "PRIVMSG #%s :/timeout %s %s\n\r" msgr.Channel.String defendNickname howLongMuted)
+                    ctx.ReaderWriter
+                    (sprintf
+                        "PRIVMSG #%s :/timeout %s %s\n\r"
+                        ctx.MessageRead.Channel.String
+                        defendNickname
+                        howLongMuted)
 
                 Cache.addCacheCatDown
                     { TimeWhen = Utils.Time()
                       TimeHowLongKilled = Int64.Parse(howLongMuted)
                       TimeHowLongCantKill = Int64.Parse(howLongCantUse)
-                      Channel = msgr.Channel
+                      Channel = ctx.MessageRead.Channel
                       WhoKill = killer
                       WhoKilled = defendNickname }
 
-            let answerSubVin (msgr: MessageRead) defendNickname (rw: ReaderWriter) =
-                [| { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+            let answerSubVin (ctx: MessageContext) defendNickname =
+                [| { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s произносит FUS RO Dah и несчастного %s сдувает нахуй из чатика roflanEbalo"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s закидывает грозовыми порошками бедного %s, ужасное зрелище monkaS"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s выпускает шквал фаерболов из посоха, от %s, осталась лишь горстка пепла REEeee"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s с помощью погребения изолирует %s от чатика Minik"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s знакомит %s со своим дреморой, вам лучше не знать подробностей Kappa"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s обернувшись вервольфом раздирает на куски бедного %s"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname } |]
 
-            let answerVin (msgr: MessageRead) defendNickname (rw: ReaderWriter) =
-                [| { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+            let answerVin (ctx: MessageContext) defendNickname =
+                [| { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s запускает фаербол в ничего не подозревающего %s и он сгорает дотла..."
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s подчиняет волю %s с помощью иллюзии, теперь он может делать с ним, что хочет gachiBASS"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
                    { AnswFunc =
                          lazy
-                             (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime
-                              catDownFunction rw msgr msgr.User.Name msgr.User.Name inMuteTime userMuteTime)
+                             (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx
+
+                              catDownFunction
+                                  ctx.MessageRead.User.Name
+                                  ctx.MessageRead.User.Name
+                                  inMuteTime
+                                  userMuteTime
+                                  ctx)
                      Answer =
                          sprintf
                              "/me %s с разбега совершает сокрушительный удар по черепушке %s, кто же знал, что %s решит надеть колечко малого отражения roflanEbalo"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s подкравшись к %s перерезает его горло, всё было тихо, ни шума ни крика..."
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s подкидывает яд в карманы %s, страшная смерть..."
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx)
                      Answer =
                          sprintf
                              "/me %s взламывает жопу %s, теперь он в его полном распоряжении gachiHYPER"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname } |]
 
-            let answerSubLoose (msgr: MessageRead) defendNickname (rw: ReaderWriter) =
+            let answerSubLoose (ctx: MessageContext) defendNickname =
                 [| { AnswFunc = lazy ()
                      Answer =
                          sprintf
                              "/me %s произносит FUS RO Dah, но у %s маг. 50%s резиста и он стоит как ни в чем не бывало peepoClown"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname
                              "%" }
-                   { AnswFunc = lazy (catDownFunction rw msgr msgr.User.Name msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy
+                             (catDownFunction
+                                 ctx.MessageRead.User.Name
+                                 ctx.MessageRead.User.Name
+                                 inMuteTime
+                                 userMuteTime
+                                 ctx)
                      Answer =
-                         sprintf "/me %s забыл зарядить свой посох, результат предсказуем Kapp" msgr.User.DisplayName } |]
+                         sprintf
+                             "/me %s забыл зарядить свой посох, результат предсказуем Kapp"
+                             ctx.MessageRead.User.DisplayName } |]
 
-            let answerLoose (msgr: MessageRead) defendNickname (rw: ReaderWriter) =
+            let answerLoose (ctx: MessageContext) defendNickname =
                 [| { AnswFunc = lazy ()
                      Answer =
                          sprintf
                              "/me %s мастерским выстрелом поражает голову %s, стрела проходит на вылет, жизненноважные органы не задеты roflanEbalo"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
                    { AnswFunc = lazy ()
                      Answer =
                          sprintf
                              "/me %s пытается поразить %s молнией, но кап абсорба говорит - НЕТ! EZ"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
                    { AnswFunc =
                          lazy
-                             (catDownFunction rw msgr defendNickname msgr.User.Name inMuteTime userMuteTime
-                              catDownFunction rw msgr msgr.User.Name msgr.User.Name inMuteTime userMuteTime)
+                             (catDownFunction defendNickname ctx.MessageRead.User.Name inMuteTime userMuteTime ctx
+
+                              catDownFunction
+                                  ctx.MessageRead.User.Name
+                                  ctx.MessageRead.User.Name
+                                  inMuteTime
+                                  userMuteTime
+                                  ctx)
                      Answer =
                          sprintf
                              "/me %s подкрадывается к %s, но вдруг из ниоткуда появившийся медведь убивает их обоих roflanEbalo"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr msgr.User.Name msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy
+                             (catDownFunction
+                                 ctx.MessageRead.User.Name
+                                 ctx.MessageRead.User.Name
+                                 inMuteTime
+                                 userMuteTime
+                                 ctx)
                      Answer =
                          sprintf
                              "/me %s запускает фаербол в  %s, но он успевает защититься зеркалом Шалидора и вы погибаете..."
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
                    { AnswFunc = lazy ()
                      Answer =
                          sprintf
                              "/me %s стреляет из лука в %s, 1ое попадание, 2ое, 3ье, 10ое.. но %s всё еще жив, а хули ты хотел от луков? roflanEbalo"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr msgr.User.Name msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy
+                             (catDownFunction
+                                 ctx.MessageRead.User.Name
+                                 ctx.MessageRead.User.Name
+                                 inMuteTime
+                                 userMuteTime
+                                 ctx)
                      Answer =
                          sprintf
                              "/me %s завидев %s хорошенько разбегается, чтобы нанести удар и вдруг.. падает без сил так и не добежав до %s, а вот нехуй альтмером в тяже играть roflanEbalo"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname
                              defendNickname }
-                   { AnswFunc = lazy (catDownFunction rw msgr msgr.User.Name msgr.User.Name inMuteTime userMuteTime)
+                   { AnswFunc =
+                         lazy
+                             (catDownFunction
+                                 ctx.MessageRead.User.Name
+                                 ctx.MessageRead.User.Name
+                                 inMuteTime
+                                 userMuteTime
+                                 ctx)
                      Answer =
                          sprintf
                              "/me %s пытается подкрасться к %s, но вдруг - вас заметили roflanEbalo"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname } |]
 
-            let answerReward (msgr: MessageRead) defendNickname (rw: ReaderWriter) (mutedTime: string) =
+            let answerReward (ctx: MessageContext) defendNickname (mutedTime: string) =
 
 
-                [| { AnswFunc = lazy (catDownRewardFunction rw msgr defendNickname mutedTime)
+                [| { AnswFunc = lazy (catDownRewardFunction defendNickname mutedTime ctx)
                      Answer =
                          sprintf
                              "/me %s, вставляет кляп в рот ничего не подозревающего %s"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownRewardFunction rw msgr defendNickname mutedTime)
+                   { AnswFunc = lazy (catDownRewardFunction defendNickname mutedTime ctx)
                      Answer = sprintf "/me %s, помолчи немного дружок, ты всех утомил" defendNickname }
-                   { AnswFunc = lazy (catDownRewardFunction rw msgr defendNickname mutedTime)
+                   { AnswFunc = lazy (catDownRewardFunction defendNickname mutedTime ctx)
                      Answer =
                          sprintf
                              "/me %s, отправляет %s отдыхать, чат может спать спокойно"
-                             msgr.User.DisplayName
+                             ctx.MessageRead.User.DisplayName
                              defendNickname }
-                   { AnswFunc = lazy (catDownRewardFunction rw msgr defendNickname mutedTime)
+                   { AnswFunc = lazy (catDownRewardFunction defendNickname mutedTime ctx)
                      Answer = sprintf "/me душный %s больше не потревожит вас" defendNickname }
-                   { AnswFunc = lazy (catDownRewardFunction rw msgr defendNickname mutedTime)
+                   { AnswFunc = lazy (catDownRewardFunction defendNickname mutedTime ctx)
                      Answer =
-                         sprintf "/me %s, проветривает чатик от присутствия %s" msgr.User.DisplayName defendNickname } |]
+                         sprintf
+                             "/me %s, проветривает чатик от присутствия %s"
+                             ctx.MessageRead.User.DisplayName
+                             defendNickname } |]
 
-        let catDown (msgr: MessageRead) (rw: ReaderWriter) =
-            if msgr.User.Name = "ifozar" then
-                APITwitch.IRC.sendRaw rw (sprintf "PRIVMSG #%s :/timeout %s 300\n\r" msgr.Channel.String msgr.User.Name)
+        let catDown (ctx: MessageContext) =
+            if ctx.MessageRead.User.Name = "ifozar" then
+                APITwitch.IRC.sendRaw
+                    ctx.ReaderWriter
+                    (sprintf "PRIVMSG #%s :/timeout %s 300\n\r" ctx.MessageRead.Channel.String ctx.MessageRead.User.Name)
 
-                sprintf @"%s заебал уже эту хуйню писать" msgr.User.DisplayName
+                sprintf @"%s заебал уже эту хуйню писать" ctx.MessageRead.User.DisplayName
             else
-                match resolveUser msgr.RoomID msgr.User with
+                match resolveUser ctx.MessageRead.RoomID ctx.MessageRead.User with
                 | Broadcaster -> sprintf "Стримлер ты что пишешь..."
                 | Moderator -> sprintf "Моё уважение модераторскому корпусу, но нет roflanZdarova"
                 | VIPSubscriber -> sprintf "Можно пожалуйста постримить? PepeHands"
@@ -415,16 +481,18 @@ module private Commands =
                 | VIP -> sprintf "Ты ходишь по тонкому льду, випчик.. Ладно живи roflanEbalo"
                 | Unsubscriber ->
                     APITwitch.IRC.sendRaw
-                        rw
-                        (sprintf "PRIVMSG #%s :/timeout %s 120\n\r" msgr.Channel.String msgr.User.Name)
+                        ctx.ReaderWriter
+                        (sprintf
+                            "PRIVMSG #%s :/timeout %s 120\n\r"
+                            ctx.MessageRead.Channel.String
+                            ctx.MessageRead.User.Name)
 
                     sprintf "Я тебя щас нахуй вырублю, ансаб блять НЫА roflanEbalo"
-                | NotFound -> sprintf "/me какая-то непонятная хрень...%s" msgr.User.Name
+                | NotFound -> sprintf "/me какая-то непонятная хрень...%s" ctx.MessageRead.User.Name
 
-        let rewardMute (msgr: MessageRead) (rw: ReaderWriter) =
+        let rewardMute (ctx: MessageContext) =
             let activation mutedTime nick =
-                let array =
-                    Answers.answerReward msgr nick rw mutedTime
+                let array = Answers.answerReward ctx nick mutedTime
 
                 let elem =
                     Array.item (Utils.rand 0 array.Length) array
@@ -432,33 +500,40 @@ module private Commands =
                 elem.AnswFunc.Force()
                 elem.Answer
 
-            let defenderStatus, defenderName = Utils.resolveFirstStatusAndName msgr
+            let defenderStatus, defenderName =
+                Utils.resolveFirstStatusAndName ctx.MessageRead
 
             match defenderName with
             | Some (name) ->
-                if name = msgr.User.Name then
-                    match msgr.User.isSubscriber with
+                if name = ctx.MessageRead.User.Name then
+                    match ctx.MessageRead.User.isSubscriber with
                     | true ->
                         APITwitch.IRC.sendRaw
-                            rw
-                            (sprintf "PRIVMSG #%s :/timeout %s 150\n\r" msgr.Channel.String msgr.User.Name)
+                            ctx.ReaderWriter
+                            (sprintf
+                                "PRIVMSG #%s :/timeout %s 150\n\r"
+                                ctx.MessageRead.Channel.String
+                                ctx.MessageRead.User.Name)
                     | false ->
                         APITwitch.IRC.sendRaw
-                            rw
-                            (sprintf "PRIVMSG #%s :/timeout %s 300\n\r" msgr.Channel.String msgr.User.Name)
+                            ctx.ReaderWriter
+                            (sprintf
+                                "PRIVMSG #%s :/timeout %s 300\n\r"
+                                ctx.MessageRead.Channel.String
+                                ctx.MessageRead.User.Name)
 
-                    sprintf "%s, я давно хотела это сделать peepoGun" msgr.User.DisplayName
+                    sprintf "%s, я давно хотела это сделать peepoGun" ctx.MessageRead.User.DisplayName
                 else
                     match defenderStatus with
-                    | TryKillSub -> sprintf "%s, минус две тыщи roflanEbalo" msgr.User.DisplayName
-                    | TryKillModer -> sprintf "%s, ты чё дурачокус? peepoClown" msgr.User.DisplayName
-                    | TryKillStreamer -> sprintf "%s, ага как скажешь roflanEbalo" msgr.User.DisplayName
+                    | TryKillSub -> sprintf "%s, минус две тыщи roflanEbalo" ctx.MessageRead.User.DisplayName
+                    | TryKillModer -> sprintf "%s, ты чё дурачокус? peepoClown" ctx.MessageRead.User.DisplayName
+                    | TryKillStreamer -> sprintf "%s, ага как скажешь roflanEbalo" ctx.MessageRead.User.DisplayName
                     | TryKillNill -> sprintf "/me не может найти кому это она должна затолкать свой банхаммер"
                     | TryKillVIP -> activation mutedTimeVIP name
                     | TryKillUnsub -> activation mutedTimeOther name
             | None -> "Ну ты и дурачокус, пустое сообщение отправил..."
 
-        let catDownUserAnswer (msgr: MessageRead) (victory: bool) defenderNickName (rw: ReaderWriter) =
+        let catDownUserAnswer (ctx: MessageContext) (victory: bool) defenderNickName =
             let random = Utils.rand 0 99
 
             let activation (array: CutDownAnswer array) =
@@ -470,88 +545,98 @@ module private Commands =
 
             match victory with
             | true ->
-                if msgr.User.isSubscriber && random > 50 then
+                if ctx.MessageRead.User.isSubscriber && random > 50 then
                     activation
-                    <| Answers.answerSubVin msgr defenderNickName rw
+                    <| Answers.answerSubVin ctx defenderNickName
                 else
                     activation
-                    <| Answers.answerVin msgr defenderNickName rw
+                    <| Answers.answerVin ctx defenderNickName
             | false ->
-                if msgr.User.isSubscriber && random > 50 then
+                if ctx.MessageRead.User.isSubscriber && random > 50 then
                     activation
-                    <| Answers.answerSubLoose msgr defenderNickName rw
+                    <| Answers.answerSubLoose ctx defenderNickName
                 else
                     activation
-                    <| Answers.answerLoose msgr defenderNickName rw
+                    <| Answers.answerLoose ctx defenderNickName
 
-        let catDownUserStart (msgr: MessageRead) rw attackUserStatus defenderUserStatus defenderNickName =
-            if Cache.checkCacheCatDownKill msgr.User.Name msgr.Channel then
-                APITwitch.IRC.sendRaw rw
-                <| sprintf "PRIVMSG #%s :/timeout @%s 30" msgr.Channel.String msgr.User.Name
+        let catDownUserStart (ctx: MessageContext) attackUserStatus defenderUserStatus defenderNickName =
+            if Cache.checkCacheCatDownKill ctx.MessageRead.User.Name ctx.MessageRead.Channel then
+                APITwitch.IRC.sendRaw ctx.ReaderWriter
+                <| sprintf "PRIVMSG #%s :/timeout @%s 30" ctx.MessageRead.Channel.String ctx.MessageRead.User.Name
 
                 sprintf "Камень бьет ножницы, а я бью твое ебало спамер, НЫА roflanEbalo"
-            elif msgr.User.Name = defenderNickName then
+            elif ctx.MessageRead.User.Name = defenderNickName then
                 sprintf "Осуждаю roflanEbalo"
-            elif Cache.checkCacheCatDownKilled defenderNickName msgr.Channel then
+            elif Cache.checkCacheCatDownKilled defenderNickName ctx.MessageRead.Channel then
                 sprintf "%s уже вырублен" defenderNickName
             else
                 match attackUserStatus with
                 | Broadcaster ->
-                    match Utils.nameSecondWord msgr with
+                    match Utils.nameSecondWord ctx.MessageRead with
                     | Some (name) ->
                         if defenderUserStatus = NotFound then
                             sprintf "/me достает БФГ9000, но не может найти цель %s..." defenderNickName
                         else
-                            APITwitch.IRC.sendRaw rw
-                            <| sprintf "PRIVMSG #%s :/timeout @%s 30" msgr.Channel.String msgr.User.Name
+                            APITwitch.IRC.sendRaw ctx.ReaderWriter
+                            <| sprintf
+                                "PRIVMSG #%s :/timeout @%s 30"
+                                ctx.MessageRead.Channel.String
+                                ctx.MessageRead.User.Name
 
-                            sprintf "/me %s произносит YOL TooR Shul и испепеляет %s monkaX" msgr.User.DisplayName name
+                            sprintf
+                                "/me %s произносит YOL TooR Shul и испепеляет %s monkaX"
+                                ctx.MessageRead.User.DisplayName
+                                name
                     | None -> sprintf "/me ты куда пыхаешь..."
-                | Moderator -> sprintf "%s, ты что забыл свой банхаммер дома? monkaHmm" msgr.User.DisplayName
-                | NotFound -> sprintf "/me something wrong... %s" msgr.User.Name
+                | Moderator -> sprintf "%s, ты что забыл свой банхаммер дома? monkaHmm" ctx.MessageRead.User.DisplayName
+                | NotFound -> sprintf "/me something wrong... %s" ctx.MessageRead.User.Name
                 | Subscriber ->
                     match defenderUserStatus with
-                    | SubVin -> catDownUserAnswer msgr true defenderNickName rw
-                    | SubLoose -> catDownUserAnswer msgr false defenderNickName rw
-                    | Moder -> sprintf "%s, Agakakskagesh Agakakskagesh Agakakskagesh" msgr.User.DisplayName
+                    | SubVin -> catDownUserAnswer ctx true defenderNickName
+                    | SubLoose -> catDownUserAnswer ctx false defenderNickName
+                    | Moder -> sprintf "%s, Agakakskagesh Agakakskagesh Agakakskagesh" ctx.MessageRead.User.DisplayName
                     | Streamer -> "У стримера бесплотность с капом отката на крики roflanEbalo"
                     | Nill -> sprintf "/me достает БФГ9000, но не может найти цель %s..." defenderNickName
                     | _ -> "/me something wrong..."
                 | VIPSubscriber ->
                     match defenderUserStatus with
-                    | SubVipVin -> catDownUserAnswer msgr true defenderNickName rw
-                    | SubVipLoose -> catDownUserAnswer msgr false defenderNickName rw
-                    | Moder -> sprintf "%s, Agakakskagesh Agakakskagesh Agakakskagesh" msgr.User.DisplayName
+                    | SubVipVin -> catDownUserAnswer ctx true defenderNickName
+                    | SubVipLoose -> catDownUserAnswer ctx false defenderNickName
+                    | Moder -> sprintf "%s, Agakakskagesh Agakakskagesh Agakakskagesh" ctx.MessageRead.User.DisplayName
                     | Streamer -> "У стримера бесплотность с капом отката на крики roflanEbalo"
                     | Nill -> sprintf "/me достает БФГ9000, но не может найти цель %s..." defenderNickName
                 | VIP ->
                     match defenderUserStatus with
-                    | VipVin -> catDownUserAnswer msgr true defenderNickName rw
-                    | VipLoose -> catDownUserAnswer msgr false defenderNickName rw
-                    | Moder -> sprintf "%s, Agakakskagesh Agakakskagesh Agakakskagesh" msgr.User.DisplayName
+                    | VipVin -> catDownUserAnswer ctx true defenderNickName
+                    | VipLoose -> catDownUserAnswer ctx false defenderNickName
+                    | Moder -> sprintf "%s, Agakakskagesh Agakakskagesh Agakakskagesh" ctx.MessageRead.User.DisplayName
                     | Streamer -> "У стримера бесплотность с капом отката на крики roflanEbalo"
                     | Nill -> sprintf "/me достает БФГ9000, но не может найти цель %s..." defenderNickName
                     | _ -> "/me something wrong..."
                 | Unsubscriber ->
                     match defenderUserStatus with
-                    | UnsubVin -> catDownUserAnswer msgr true defenderNickName rw
-                    | UnsubLoose -> catDownUserAnswer msgr false defenderNickName rw
-                    | Moder -> sprintf "%s, Agakakskagesh Agakakskagesh Agakakskagesh" msgr.User.DisplayName
+                    | UnsubVin -> catDownUserAnswer ctx true defenderNickName
+                    | UnsubLoose -> catDownUserAnswer ctx false defenderNickName
+                    | Moder -> sprintf "%s, Agakakskagesh Agakakskagesh Agakakskagesh" ctx.MessageRead.User.DisplayName
                     | Streamer -> "У стримера бесплотность с капом отката на крики roflanEbalo"
                     | Nill -> sprintf "/me достает БФГ9000, но не может найти цель %s..." defenderNickName
                     | _ -> "/me something wrong..."
 
-        let catDownUser msgr (rw: ReaderWriter) =
-            let defenderUserStatus, defenderNickName = Utils.resolveSecondStatusAndName msgr
+        let catDownUser (ctx: MessageContext) =
+            let defenderUserStatus, defenderNickName =
+                Utils.resolveSecondStatusAndName ctx.MessageRead
+
             printfn "%A %A" defenderUserStatus defenderNickName
 
             if defenderNickName = None then
                 sprintf @"Ты дурачокус? кого вырубать roflanEbalo"
             else
-                let attackUserStatus = resolveUser msgr.RoomID msgr.User
-                catDownUserStart msgr rw attackUserStatus defenderUserStatus defenderNickName.Value
+                let attackUserStatus =
+                    resolveUser ctx.MessageRead.RoomID ctx.MessageRead.User
 
-    let love (msgr: MessageRead) =
+                catDownUserStart ctx attackUserStatus defenderUserStatus defenderNickName.Value
+
+    let love (ctx: MessageContext) =
         let loveMessage loverName lovedName lovePercent =
             match lovePercent with
             | percent when percent <= 0 ->
@@ -566,21 +651,21 @@ module private Commands =
                 sprintf "%s%% VirtualHug между %s и %s ого!" (string percent) loverName lovedName
             | _ -> "/me somethig wrong with this love..."
 
-        Utils.nameSecondWord msgr
+        Utils.nameSecondWord ctx.MessageRead
         |> function
         | Some (lovedName) ->
-            Cache.checkCacheLove msgr.User.DisplayName lovedName
+            Cache.checkCacheLove ctx.MessageRead.User.DisplayName lovedName
             |> function
             | Some (lovers) -> loveMessage lovers.LoverName lovers.LovedName lovers.PercentLove
             | None ->
                 let lovePercent = Utils.rand 0 100
-                Cache.addCacheLove msgr.User.DisplayName lovedName lovePercent
-                loveMessage msgr.User.DisplayName lovedName lovePercent
-        | None -> sprintf "%s ****void тоже любит тебя!" msgr.User.DisplayName
+                Cache.addCacheLove ctx.MessageRead.User.DisplayName lovedName lovePercent
+                loveMessage ctx.MessageRead.User.DisplayName lovedName lovePercent
+        | None -> sprintf "%s ****void тоже любит тебя!" ctx.MessageRead.User.DisplayName
 
-    let uptime (msgr: MessageRead) =
-        if APITwitch.Requests.checkOnline msgr.Channel then
-            APITwitch.Requests.getStreams msgr.Channel
+    let uptime (ctx: MessageContext) =
+        if APITwitch.Requests.checkOnline ctx.MessageRead.Channel then
+            APITwitch.Requests.getStreams ctx.MessageRead.Channel
             |> APITwitch.deserializeRespons<GetStreams>
             |> function
             | Ok (data) ->
@@ -610,47 +695,59 @@ module private Commands =
         else
             "Стрим офлайн"
 
-    let roulette (msgr: MessageRead) (rw: ReaderWriter) =
-        if msgr.User.isModerator then
+    let roulette (ctx: MessageContext) =
+        if ctx.MessageRead.User.isModerator then
             "Хорошая попытка, модератор..."
-        elif msgr.User.UserID = msgr.RoomID then
+        elif ctx.MessageRead.User.UserID = ctx.MessageRead.RoomID then
             "Вызывайте дурку BloodTrail"
         elif Utils.rand 0 99 < 50 then
             APITwitch.IRC.sendRaw
-                rw
-                (sprintf "PRIVMSG #%s :/me подносит револьвер к виску %s\n\r" msgr.Channel.String msgr.User.DisplayName)
+                ctx.ReaderWriter
+                (sprintf
+                    "PRIVMSG #%s :/me подносит револьвер к виску %s\n\r"
+                    ctx.MessageRead.Channel.String
+                    ctx.MessageRead.User.DisplayName)
 
             System.Threading.Thread.Sleep(2000)
 
             APITwitch.IRC.sendRaw
-                rw
-                (sprintf "PRIVMSG #%s :/timeout @%s 120 рулетка\n\r" msgr.Channel.String msgr.User.Name)
+                ctx.ReaderWriter
+                (sprintf
+                    "PRIVMSG #%s :/timeout @%s 120 рулетка\n\r"
+                    ctx.MessageRead.Channel.String
+                    ctx.MessageRead.User.Name)
 
-            sprintf "Револьвер выстреливает! %s погибает у чатлан на руках BibleThump 7" msgr.User.DisplayName
+            sprintf
+                "Револьвер выстреливает! %s погибает у чатлан на руках BibleThump 7"
+                ctx.MessageRead.User.DisplayName
         else
             APITwitch.IRC.sendRaw
-                rw
-                (sprintf "PRIVMSG #%s :/me подносит револьвер к виску %s\n\r" msgr.Channel.String msgr.User.DisplayName)
+                ctx.ReaderWriter
+                (sprintf
+                    "PRIVMSG #%s :/me подносит револьвер к виску %s\n\r"
+                    ctx.MessageRead.Channel.String
+                    ctx.MessageRead.User.DisplayName)
 
             System.Threading.Thread.Sleep(2000)
-            sprintf "Револьвер издает щелчок, %s выживает! PogChamp" msgr.User.DisplayName
+            sprintf "Револьвер издает щелчок, %s выживает! PogChamp" ctx.MessageRead.User.DisplayName
 
-    let harakiri (msgr: MessageRead) =
-        if msgr.User.isModerator then
+    let harakiri (ctx: MessageContext) =
+        if ctx.MessageRead.User.isModerator then
             "Хорошая попытка, модератор..."
-        elif msgr.User.UserID = msgr.RoomID then
+        elif ctx.MessageRead.User.UserID = ctx.MessageRead.RoomID then
             "Вызывайте дурку BloodTrail"
         else
-            sprintf "/timeout @%s 60 харакири" msgr.User.Name
+            sprintf "/timeout @%s 60 харакири" ctx.MessageRead.User.Name
 
-    let addCommandDataBase (msgr: MessageRead) =
+    let addCommandDataBase (ctx: MessageContext) =
         Logger.Log.TraceDeb
-        <| sprintf "addCommandDataBase %A" msgr
+        <| sprintf "addCommandDataBase %A" ctx.MessageRead
 
-        let splited = msgr.Message.Split(' ')
+        let splited = ctx.MessageRead.Message.Split(' ')
 
-        if (msgr.User.UserID <> msgr.RoomID)
-           && (msgr.User.UserID <> "70592477") then
+        if (ctx.MessageRead.User.UserID
+            <> ctx.MessageRead.RoomID)
+           && (ctx.MessageRead.User.UserID <> "70592477") then
             "Access denied"
         elif splited.Length < 3 then
             "Ну и что добавлять? Команда или ответ не указаны."
@@ -662,46 +759,47 @@ module private Commands =
                 |> Array.reduce ^ fun acc elem -> acc + " " + elem
 
             SingleData.DB.addChannelCommand
-                msgr.Channel
+                ctx.MessageRead.Channel
                 { chCommand = command
                   chAnswer = commandAnswer }
             |> function
             | Ok (answer) ->
-                Cache.updateCacheChannelCommands msgr.Channel
+                Cache.updateCacheChannelCommands ctx.MessageRead.Channel
                 answer
             | Error (err) ->
-                Cache.updateCacheChannelCommands msgr.Channel
+                Cache.updateCacheChannelCommands ctx.MessageRead.Channel
                 err
 
-    let deleteCommandDataBase (msgr: MessageRead) =
+    let deleteCommandDataBase (ctx: MessageContext) =
         Logger.Log.TraceDeb
-        <| sprintf "deleteCommandDataBase %A" msgr
+        <| sprintf "deleteCommandDataBase %A" ctx.MessageRead
 
-        let splited = msgr.Message.Split(' ')
+        let splited = ctx.MessageRead.Message.Split(' ')
 
-        if (msgr.User.UserID <> msgr.RoomID)
-           && (msgr.User.UserID <> "70592477") then
+        if (ctx.MessageRead.User.UserID
+            <> ctx.MessageRead.RoomID)
+           && (ctx.MessageRead.User.UserID <> "70592477") then
             "Access denied"
         elif splited.Length < 2 then
             "Ну и что удалять? Команда для удаления не указана."
         else
 
-            Cache.resolveCommandCache msgr (splited.[1].ToLower())
+            Cache.resolveCommandCache ctx.MessageRead (splited.[1].ToLower())
             |> function
             | Some (command) ->
-                SingleData.DB.deleteChannelCommand msgr.Channel command
+                SingleData.DB.deleteChannelCommand ctx.MessageRead.Channel command
                 |> function
                 | Ok (answer) ->
-                    Cache.updateCacheChannelCommands msgr.Channel
+                    Cache.updateCacheChannelCommands ctx.MessageRead.Channel
                     answer
                 | Error (err) -> err
             | None -> sprintf "Команда %s не найдена" (splited.[1].ToLower())
 
-    let listCommandDataBase (msgr: MessageRead) =
+    let listCommandDataBase (ctx: MessageContext) =
         Logger.Log.TraceDeb
-        <| sprintf "listCommandDataBase %A" msgr
+        <| sprintf "listCommandDataBase %A" ctx.MessageRead
 
-        SingleData.DB.getCommands msgr.Channel
+        SingleData.DB.getCommands ctx.MessageRead.Channel
         |> function
         | Ok (list) ->
             if not list.IsEmpty then
@@ -713,14 +811,15 @@ module private Commands =
                 " Список кастомных команд пуст."
         | Error (err) -> err
 
-    let updateCommandDataBase (msgr: MessageRead) =
+    let updateCommandDataBase (ctx: MessageContext) =
         Logger.Log.TraceDeb
-        <| sprintf "updateCommandDataBase %A" msgr
+        <| sprintf "updateCommandDataBase %A" ctx.MessageRead
 
-        let splited = msgr.Message.Split(' ')
+        let splited = ctx.MessageRead.Message.Split(' ')
 
-        if (msgr.User.UserID <> msgr.RoomID)
-           && (msgr.User.UserID <> "70592477") then
+        if (ctx.MessageRead.User.UserID
+            <> ctx.MessageRead.RoomID)
+           && (ctx.MessageRead.User.UserID <> "70592477") then
             "Access denied"
         elif splited.Length < 3 then
             "Ну и что обновлять? Команда для обновления либо новое значение не указаны."
@@ -732,15 +831,15 @@ module private Commands =
                 splited.[2..]
                 |> Array.reduce ^ fun acc elem -> acc + " " + elem
 
-            Cache.resolveCommandCache msgr command
+            Cache.resolveCommandCache ctx.MessageRead command
             |> function
             | Some (cmd) ->
                 let newCommand = { cmd with chAnswer = commandAnswer }
 
-                SingleData.DB.updateChannelCommand msgr.Channel newCommand
+                SingleData.DB.updateChannelCommand ctx.MessageRead.Channel newCommand
                 |> function
                 | Ok (answer) ->
-                    Cache.updateCacheChannelCommands msgr.Channel
+                    Cache.updateCacheChannelCommands ctx.MessageRead.Channel
                     answer
                 | Error (err) -> err
             | None -> sprintf "Команда %s не найдена" command
@@ -830,165 +929,122 @@ module private Commands =
                 else
                     "Некорректный ввод, не получается преобразовать строку в число."
 
-    let commandList (msg: MessageRead) (rw: ReaderWriter) =
+    let commandList () =
 
         [ { cmdName = [ "ping"; "pong"; "пинг" ]
-            Command =
-                lazy
-                    ({ chCommand = "ping"
-                       chAnswer = "pong" })
+            Command = (fun _ -> "pong")
             Channel = All
             Ban = [] }
           { cmdName = [ "roll"; "ролл" ]
-            Command =
-                lazy
-                    ({ chCommand = "roll"
-                       chAnswer = string (Utils.rand 1 20) })
+            Command = (fun _ -> string (Utils.rand 1 20))
             Channel = All
             Ban = [] }
           { cmdName = [ "ball"; "8ball"; "шар" ]
-            Command =
-                lazy
-                    ({ chCommand = "шар"
-                       chAnswer = Array.item (Utils.rand 0 ball.Length) ball })
+            Command = (fun _ -> Array.item (Utils.rand 0 ball.Length) ball)
             Channel = All
             Ban = [] }
           { cmdName = [ "build"; "билд" ]
-            Command =
-                lazy
-                    ({ chCommand = "билд"
-                       chAnswer = Array.item (Utils.rand 0 buildAnswers.Length) buildAnswers })
+            Command = (fun _ -> Array.item (Utils.rand 0 buildAnswers.Length) buildAnswers)
             Channel = All
             Ban = [] }
           { cmdName = [ "julia"; "джулия"; "юля" ]
-            Command =
-                lazy
-                    ({ chCommand = "julia"
-                       chAnswer = Array.item (Utils.rand 0 genericAnswers.Length) genericAnswers })
+            Command = (fun _ -> Array.item (Utils.rand 0 genericAnswers.Length) genericAnswers)
             Channel = All
             Ban = [] }
           { cmdName = [ "вырубай" ]
-            Command =
-                lazy
-                    ({ chCommand = "вырубай"
-                       chAnswer = Reflyq.catDown msg rw })
+            Command = Reflyq.catDown
             Channel = Channel(Reflyq)
             Ban = [] }
           { cmdName = [ "вырубить" ]
-            Command =
-                lazy
-                    ({ chCommand = "вырубить"
-                       chAnswer = Reflyq.catDownUser msg rw })
+            Command = Reflyq.catDownUser
             Channel = Channel(Reflyq)
             Ban = [] }
           { cmdName = [ "love"; "люблю" ]
-            Command =
-                lazy
-                    ({ chCommand = "love"
-                       chAnswer = love msg })
+            Command = love
             Channel = All
             Ban = [] }
           { cmdName = [ "addcmd" ]
-            Command =
-                lazy
-                    ({ chCommand = "addcmd"
-                       chAnswer = addCommandDataBase msg })
+            Command = addCommandDataBase
             Channel = All
             Ban = [] }
           { cmdName = [ "deletecmd" ]
-            Command =
-                lazy
-                    ({ chCommand = "deletecmd"
-                       chAnswer = deleteCommandDataBase msg })
+            Command = deleteCommandDataBase
             Channel = All
             Ban = [] }
           { cmdName = [ "updatecmd" ]
-            Command =
-                lazy
-                    ({ chCommand = "updatecmd"
-                       chAnswer = updateCommandDataBase msg })
+            Command = updateCommandDataBase
             Channel = All
             Ban = [] }
           { cmdName = [ "listcmd" ]
-            Command =
-                lazy
-                    ({ chCommand = "listcmd"
-                       chAnswer = listCommandDataBase msg })
+            Command = listCommandDataBase
             Channel = All
             Ban = [] }
           { cmdName = [ "live"; "жива" ]
-            Command =
-                lazy
-                    ({ chCommand = "live"
-                       chAnswer = sprintf "%A" (DateTime.Now - Utils.startTime) })
+            Command = (fun _ -> sprintf "%A" (DateTime.Now - Utils.startTime))
             Channel = All
             Ban = [] }
           { cmdName = [ "uptime"; "аптайм" ]
-            Command =
-                lazy
-                    ({ chCommand = "uptime"
-                       chAnswer = uptime msg })
+            Command = uptime
             Channel = All
             Ban = [] }
           { cmdName = [ "харакири"; "сеппуку" ]
-            Command =
-                lazy
-                    ({ chCommand = "харакири"
-                       chAnswer = harakiri msg })
+            Command = harakiri
             Channel = All
             Ban = [ Reflyq; Kaelia ] }
           { cmdName = [ "рулетка" ]
-            Command =
-                lazy
-                    ({ chCommand = "рулетка"
-                       chAnswer = roulette msg rw })
+            Command = roulette
             Channel = All
             Ban = [ Kotik; Reflyq; Kaelia ] } ]
 
 
-    let rewardList (msgr: MessageRead) (rw: ReaderWriter) =
+    let rewardList () =
         [ { RewardCode = "fa297b45-75cc-4ef2-ba49-841b0fa86ec1"
-            Command = lazy (Reflyq.rewardMute msgr rw)
+            Command = Reflyq.rewardMute
             Channel = Reflyq } ]
 
 module private Parse =
 
-    let resolveCommandList (cmd: string) (msgr: MessageRead) (rw: ReaderWriter) =
+    let resolveCommandList (cmd: string) (ctx: MessageContext) =
         try
-            Commands.commandList msgr rw
+            Commands.commandList ()
             |> List.find
                ^ fun elem ->
                    match elem with
                    | el when
                        cmd </> el.cmdName
-                       && not (msgr.Channel </> el.Ban) ->
+                       && not (ctx.MessageRead.Channel </> el.Ban) ->
                        match el.Channel with
                        | All -> true
-                       | Channel (ch) -> ch = msgr.Channel
-                       | ChannelList (cl) -> msgr.Channel </> cl
+                       | Channel (ch) -> ch = ctx.MessageRead.Channel
+                       | ChannelList (cl) -> ctx.MessageRead.Channel </> cl
                    | _ -> false
             |> function
             | com -> Ok com.Command
         with eX -> Error eX.Message
 
 
-    let resolveCommand (msgr: MessageRead) (rw: ReaderWriter) (resu: Result<string, string>) =
+    let resolveCommand (ctx: MessageContext) (resu: Result<string, string>) =
         match resu with
         | Ok (prefix) ->
             let cmd =
-                if msgr.Message.ToLower().StartsWith(prefix) then
-                    msgr.Message.ToLower().Split(' ').[0].Substring(1)
+                if ctx
+                    .MessageRead
+                    .Message
+                    .ToLower()
+                       .StartsWith(prefix) then
+                    ctx.MessageRead.Message.ToLower().Split(' ').[0]
+                        .Substring(1)
                 else
                     ""
 
-            Cache.resolveCommandCache msgr cmd
+            Cache.resolveCommandCache ctx.MessageRead cmd
             |> function
             | Some (ok) ->
                 let commandAnswer =
-                    ok.chAnswer.Replace("[<username>]", msgr.User.DisplayName)
+                    ok.chAnswer.Replace("[<username>]", ctx.MessageRead.User.DisplayName)
 
-                Ok(lazy ({ ok with chAnswer = commandAnswer }))
-            | None (_) -> resolveCommandList cmd msgr rw
+                Ok(fun _ -> commandAnswer)
+            | None (_) -> resolveCommandList cmd ctx
 
         | Error (err) -> Error err
 
@@ -1057,8 +1113,8 @@ module private Parse =
             secondLineSplit
             |> Array.findIndex ^ fun elem -> elem.Contains(':')
 
-        (((secondLineSplit.[d..]
-           |> Array.reduce ^ fun acc elem -> acc + " " + elem))).[1..]
+        (((((secondLineSplit.[d..]
+             |> Array.reduce ^ fun acc elem -> acc + " " + elem))))).[1..]
 
 
     let channel (secondLineSplit: string array) =
@@ -1068,9 +1124,9 @@ module private Parse =
 
         d.Substring(1)
 
-    let command (msgr: MessageRead) rw =
-        Cache.checkPrefixChannel msgr.Channel
-        |> resolveCommand msgr rw
+    let command (ctx: MessageContext) =
+        Cache.checkPrefixChannel ctx.MessageRead.Channel
+        |> resolveCommand ctx
         |> function
         | Ok (ok) -> Some(ok)
         | Error (err) ->
@@ -1079,18 +1135,18 @@ module private Parse =
 
 module Handlers =
 
-    let handleRewards (msgr: MessageRead) (rw: ReaderWriter) =
-        match msgr.RewardCode with
+    let handleRewards (ctx: MessageContext) =
+        match ctx.MessageRead.RewardCode with
         | Some (code) ->
-            Commands.rewardList msgr rw
+            Commands.rewardList ()
             |> List.tryFind
                ^ fun (elem: RewardList) -> code = elem.RewardCode
             |> function
             | Some (reward) ->
                 APITwitch.IRC.sendMessage
                     { Channel = reward.Channel
-                      Message = reward.Command.Force()
-                      Writer = rw.Writer }
+                      Message = reward.Command ctx
+                      Writer = ctx.ReaderWriter.Writer }
             | _ -> ()
         | _ -> ()
 
@@ -1129,51 +1185,52 @@ module Handlers =
             | None -> Error "Can't resolve channel string"
 
 
-    let handleCommands (msgr: MessageRead) (rw: ReaderWriter) =
-        match Parse.command msgr rw with
-        | Some (lazyCommand) ->
+    let handleCommands (ctx: MessageContext) =
+        match Parse.command ctx with
+        | Some (commandFunc) ->
             APITwitch.IRC.sendMessage
-                { Channel = msgr.Channel
-                  Message = lazyCommand.Force().chAnswer
-                  Writer = rw.Writer }
+                { Channel = ctx.MessageRead.Channel
+                  Message = commandFunc ctx
+                  Writer = ctx.ReaderWriter.Writer }
         | None -> ()
 
-    let handleReacts (msgr: MessageRead) (rw: ReaderWriter) =
-        if Cache.checkLastReactTimeChannel msgr.Channel
-           && Cache.checkEmotionToggleChannel msgr.Channel then
-            match msgr with
+    let handleReacts (ctx: MessageContext) =
+        if Cache.checkLastReactTimeChannel ctx.MessageRead.Channel
+           && Cache.checkEmotionToggleChannel ctx.MessageRead.Channel then
+            match ctx.MessageRead with
             | SMOrc react ->
-                Cache.updateLastReactTimeChannel msgr.Channel
+                Cache.updateLastReactTimeChannel ctx.MessageRead.Channel
 
                 APITwitch.IRC.sendMessage
-                    { Channel = msgr.Channel
+                    { Channel = ctx.MessageRead.Channel
                       Message = react
-                      Writer = rw.Writer }
+                      Writer = ctx.ReaderWriter.Writer }
             | PogChamp react ->
-                Cache.updateLastReactTimeChannel msgr.Channel
+                Cache.updateLastReactTimeChannel ctx.MessageRead.Channel
 
                 APITwitch.IRC.sendMessage
-                    { Channel = msgr.Channel
+                    { Channel = ctx.MessageRead.Channel
                       Message = react
-                      Writer = rw.Writer }
+                      Writer = ctx.ReaderWriter.Writer }
             | Greetings react ->
-                Cache.updateLastReactTimeChannel msgr.Channel
+                Cache.updateLastReactTimeChannel ctx.MessageRead.Channel
 
                 APITwitch.IRC.sendMessage
-                    { Channel = msgr.Channel
+                    { Channel = ctx.MessageRead.Channel
                       Message = react
-                      Writer = rw.Writer }
+                      Writer = ctx.ReaderWriter.Writer }
             | NoReact -> ()
         else
             ()
 
-    let handleMasterCommands (msgr: MessageRead) (rw: ReaderWriter) =
-        let splited = msgr.Message.ToLower().Split()
+    let handleMasterCommands (ctx: MessageContext) =
+        let splited =
+            ctx.MessageRead.Message.ToLower().Split()
 
         if splited.Length < 1 then
             ()
         else if splited.[0].Length > 1 then
-            Cache.checkPrefixChannel msgr.Channel
+            Cache.checkPrefixChannel ctx.MessageRead.Channel
             |> function
             | Ok (prefix) ->
                 if string splited.[0].[0] = prefix then
@@ -1182,24 +1239,40 @@ module Handlers =
                     match command with
                     | "setprefix" ->
                         APITwitch.IRC.sendMessage
-                            { Channel = msgr.Channel
-                              Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.Prefix
-                              Writer = rw.Writer }
+                            { Channel = ctx.MessageRead.Channel
+                              Message =
+                                  Commands.updateChannelSettingDataBase
+                                      ctx.MessageRead
+                                      ctx.ReaderWriter
+                                      ChannelSettings.Prefix
+                              Writer = ctx.ReaderWriter.Writer }
                     | "settoggle" ->
                         APITwitch.IRC.sendMessage
-                            { Channel = msgr.Channel
-                              Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.Toggle
-                              Writer = rw.Writer }
+                            { Channel = ctx.MessageRead.Channel
+                              Message =
+                                  Commands.updateChannelSettingDataBase
+                                      ctx.MessageRead
+                                      ctx.ReaderWriter
+                                      ChannelSettings.Toggle
+                              Writer = ctx.ReaderWriter.Writer }
                     | "setreactcd" ->
                         APITwitch.IRC.sendMessage
-                            { Channel = msgr.Channel
-                              Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.EmotionCoolDown
-                              Writer = rw.Writer }
+                            { Channel = ctx.MessageRead.Channel
+                              Message =
+                                  Commands.updateChannelSettingDataBase
+                                      ctx.MessageRead
+                                      ctx.ReaderWriter
+                                      ChannelSettings.EmotionCoolDown
+                              Writer = ctx.ReaderWriter.Writer }
                     | "setreacttoggle" ->
                         APITwitch.IRC.sendMessage
-                            { Channel = msgr.Channel
-                              Message = Commands.updateChannelSettingDataBase msgr rw ChannelSettings.EmotionToggle
-                              Writer = rw.Writer }
+                            { Channel = ctx.MessageRead.Channel
+                              Message =
+                                  Commands.updateChannelSettingDataBase
+                                      ctx.MessageRead
+                                      ctx.ReaderWriter
+                                      ChannelSettings.EmotionToggle
+                              Writer = ctx.ReaderWriter.Writer }
                     | _ -> ()
                 else
                     ()
@@ -1207,13 +1280,14 @@ module Handlers =
         else
             ()
 
-    let handleHelper (msgr: MessageRead) (rw: ReaderWriter) =
-        let splited = msgr.Message.ToLower().Split()
+    let handleHelper (ctx: MessageContext) =
+        let splited =
+            ctx.MessageRead.Message.ToLower().Split()
 
         if splited.Length < 1 then
             ()
         else if splited.[0].Length > 1 then
-            Cache.checkPrefixChannel msgr.Channel
+            Cache.checkPrefixChannel ctx.MessageRead.Channel
             |> function
             | Ok (prefix) ->
                 if string splited.[0].[0] = prefix then
@@ -1221,10 +1295,10 @@ module Handlers =
 
                     match command with
                     | "help" ->
-                        let commands = Commands.commandList msgr rw
+                        let commands = Commands.commandList ()
 
                         let masterHelper =
-                            if msgr.RoomID = msgr.User.UserID then
+                            if ctx.MessageRead.RoomID = ctx.MessageRead.User.UserID then
                                 "setprefix, settoggle, setreactcd, setreacttoggle "
                             else
                                 ""
@@ -1234,15 +1308,15 @@ module Handlers =
                             |> List.filter
                                ^ fun elem ->
                                    match elem with
-                                   | el when not (List.contains msgr.Channel el.Ban) ->
+                                   | el when not (List.contains ctx.MessageRead.Channel el.Ban) ->
                                        match el.Channel with
                                        | All -> true
-                                       | Channel (ch) -> ch = msgr.Channel
-                                       | ChannelList (cl) -> List.contains msgr.Channel cl
+                                       | Channel (ch) -> ch = ctx.MessageRead.Channel
+                                       | ChannelList (cl) -> List.contains ctx.MessageRead.Channel cl
                                    | _ -> false
 
                         APITwitch.IRC.sendMessage
-                            { Channel = msgr.Channel
+                            { Channel = ctx.MessageRead.Channel
                               Message =
                                   "Список доступных команд: "
                                   + masterHelper
@@ -1250,8 +1324,8 @@ module Handlers =
                                      |> List.collect
                                         ^ fun (elem: CommandList) -> [ elem.cmdName.Head ]
                                      |> List.reduce ^ fun acc elem -> acc + ", " + elem)
-                                  + Commands.listCommandDataBase msgr
-                              Writer = rw.Writer }
+                                  + Commands.listCommandDataBase ctx
+                              Writer = ctx.ReaderWriter.Writer }
                     | _ -> ()
                 else
                     ()
@@ -1259,8 +1333,8 @@ module Handlers =
         else
             ()
 
-    let handleCache msgr rw =
+    let handleCache (ctx: MessageContext) =
         Cache.handleCacheLove ()
-        Cache.handleCacheUsers msgr
+        Cache.handleCacheUsers ctx.MessageRead
         Cache.handleCacheCatDown ()
-        Cache.handleCacheCatDownReward rw
+        Cache.handleCacheCatDownReward ctx.ReaderWriter

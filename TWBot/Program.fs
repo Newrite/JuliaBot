@@ -166,17 +166,21 @@ let main argv =
             | Kaelia -> Cache.tempKaeliaMessageCounter <- Cache.tempKaeliaMessageCounter + 1
             | _ -> ()
 
-            Bot.Handlers.handleCache msgr readerWriter
-            Bot.Handlers.handleMasterCommands msgr readerWriter
+            let ctx =
+                { MessageRead = msgr
+                  ReaderWriter = readerWriter }
+
+            Bot.Handlers.handleCache ctx
+            Bot.Handlers.handleMasterCommands ctx
 
             LogChat.writePrint msgr
 
             match Cache.checkToggleChannel msgr.Channel with
             | true ->
-                Bot.Handlers.handleHelper msgr readerWriter
-                Bot.Handlers.handleReacts msgr readerWriter
-                Bot.Handlers.handleCommands msgr readerWriter
-                Bot.Handlers.handleRewards msgr readerWriter
+                Bot.Handlers.handleHelper ctx
+                Bot.Handlers.handleReacts ctx
+                Bot.Handlers.handleCommands ctx
+                Bot.Handlers.handleRewards ctx
             | false -> ()
         | Error (err) ->
             Log.TraceWarn
