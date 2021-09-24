@@ -857,8 +857,9 @@ namespace TWBot
         
         val startTG: unit -> unit
 
-
-module Program
-
-val main: argv: string[] -> int
+namespace TWBot
+    
+    module Main =
+        
+        val main: argv: string[] -> int
 

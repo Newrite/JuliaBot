@@ -13,10 +13,10 @@ module private Utils =
 
     let startTime = DateTime.Now
 
-    let Time () = DateTime.Now.Ticks / 10000000L
+    let Time () = let x = DateTime.Now in x.Ticks / 10000000L
 
     let rand min max =
-        let rndGen = Random(int DateTime.Now.Ticks)
+        let rndGen = Random(let x = DateTime.Now in x.Ticks |> int)
         rndGen.Next(min, max)
 
     let nameSecondWordLower (msgr: MessageRead) =

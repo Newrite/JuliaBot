@@ -78,7 +78,7 @@ let updateCacheChannelSettings (channel: Channels) =
                   EmotionCoolDown = emotionCoolDawn
                   Toggle = toggle
                   EmotionToggle = etoggle
-                  LastReactTime = (DateTime.Now.Ticks / 10000000L) }) |]
+                  LastReactTime = (let x = DateTime.Now in x.Ticks / 10000000L) }) |]
 
     Logger.Log.TraceInf "Update cache channel settings complete"
 
@@ -148,7 +148,7 @@ let addCacheLove loverName lovedName percentLove =
             cacheLovers
             |> Array.append [| { LoverName = loverName
                                  LovedName = lovedName
-                                 TimeWhen = (DateTime.Now.Ticks / 10000000L)
+                                 TimeWhen = (let x = DateTime.Now in x.Ticks / 10000000L)
                                  PercentLove = percentLove } |]
 
         Logger.Log.TraceInf "Lovers added to cache"
@@ -159,7 +159,7 @@ let handleCacheLove () =
         cacheLovers
         |> Array.filter
            ^ fun (elem: CacheLove) ->
-               if ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < 86400L then
+               if ((let x = DateTime.Now in x.Ticks / 10000000L) - elem.TimeWhen) < 86400L then
                    Logger.Log.TraceInf "Proc filter hanlder cache love"
 
                    Logger.Log.TraceInf
@@ -220,7 +220,7 @@ let checkLastReactTimeChannel channel =
        ^ fun (elem: Channels * CacheChannelSettings) ->
            let settings = snd elem
 
-           ((DateTime.Now.Ticks / 10000000L)
+           ((let x = DateTime.Now in x.Ticks / 10000000L)
             - settings.LastReactTime) > settings.EmotionCoolDown
            && channel = fst elem
     |> function
@@ -235,7 +235,7 @@ let updateLastReactTimeChannel channel =
     | Some (ok) ->
         let settings =
             { (snd ok) with
-                  LastReactTime = DateTime.Now.Ticks / 10000000L }
+                  LastReactTime = let x = DateTime.Now in x.Ticks / 10000000L }
 
         cacheChannelSettings <-
             cacheChannelSettings
@@ -267,14 +267,14 @@ let handleCacheCatDown () =
     cacheCutDown <-
         cacheCutDown
         |> Array.filter
-           ^ fun (elem: CacheCatDown) -> ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLongCantKill
+           ^ fun (elem: CacheCatDown) -> ((let x = DateTime.Now in x.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLongCantKill
 
 let handleCacheCatDownReward (rw: ReaderWriter) =
     cacheCutDownReward <-
         cacheCutDownReward
         |> Array.filter
            ^ fun (elem: CacheCatDownReward) ->
-               if ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLong then
+               if ((let x = DateTime.Now in x.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLong then
                    true
                else
                    rw.Writer.WriteLine(sprintf "PRIVMSG #%s :/untimeout %s" elem.Channel.String elem.WhoKilled)
@@ -295,7 +295,7 @@ let checkCacheCatDownKilled whoKilled (channel: Channels) =
        ^ fun (elem: CacheCatDown) ->
            elem.WhoKilled = whoKilled
            && elem.Channel = channel
-           && ((DateTime.Now.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLongKilled
+           && ((let x = DateTime.Now in x.Ticks / 10000000L) - elem.TimeWhen) < elem.TimeHowLongKilled
     |> function
     | Some (_) -> true
     | None -> false

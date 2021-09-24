@@ -54,7 +54,7 @@ let resolveChannelString (channel: string) =
 //#nowarn "0052"
 let (|SubVin|SubLoose|Streamer|Moder|Nill|) user =
     let random =
-        Random(int DateTime.Now.Ticks).Next(0, 99)
+        Random(let x = DateTime.Now in x.Ticks |> int).Next(0, 99)
 
     match user with
     | Broadcaster -> Streamer
@@ -83,7 +83,7 @@ let (|SubVin|SubLoose|Streamer|Moder|Nill|) user =
 
 let (|VipVin|VipLoose|Streamer|Moder|Nill|) user =
     let random =
-        Random(int DateTime.Now.Ticks).Next(0, 99)
+        Random(let x = DateTime.Now in x.Ticks |> int).Next(0, 99)
 
     match user with
     | Broadcaster -> Streamer
@@ -112,7 +112,7 @@ let (|VipVin|VipLoose|Streamer|Moder|Nill|) user =
 
 let (|UnsubVin|UnsubLoose|Streamer|Moder|Nill|) user =
     let random =
-        Random(int DateTime.Now.Ticks).Next(0, 99)
+        Random(let x = DateTime.Now in x.Ticks |> int).Next(0, 99)
 
     match user with
     | Broadcaster -> Streamer
@@ -141,7 +141,7 @@ let (|UnsubVin|UnsubLoose|Streamer|Moder|Nill|) user =
 
 let (|SubVipVin|SubVipLoose|Streamer|Moder|Nill|) user =
     let random =
-        Random(int DateTime.Now.Ticks).Next(0, 99)
+        Random(let x = DateTime.Now in x.Ticks |> int).Next(0, 99)
 
     match user with
     | Broadcaster -> Streamer

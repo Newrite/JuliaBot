@@ -22,12 +22,12 @@
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
       <PlatformTarget>x64</PlatformTarget>
-      <OtherFlags>--consolecolors --checked+ --sig:Signature.fsi --nowarn:0052</OtherFlags>
+      <OtherFlags>--consolecolors --checked+ --sig:Signature.fsi</OtherFlags>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
       <PlatformTarget>x64</PlatformTarget>
-      <OtherFlags>--consolecolors --checked+ --sig:Signature.fsi --nowarn:0052</OtherFlags>
+      <OtherFlags>--consolecolors --checked+ --sig:Signature.fsi</OtherFlags>
     </PropertyGroup>
 
     <ItemGroup>
