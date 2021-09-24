@@ -29,6 +29,8 @@ let (|ResolveChannelString|) (channel: string) =
     | "lievrefru" -> Some(Lievrefr)
     | "madelineqt" -> Some(Madelinqa)
     | "kaelia_kael" -> Some(Kaelia)
+    | "crtzein" -> Some(Zein)
+    | "desmond_hh" -> Some(Desmond)
     | _ -> None
 
 let resolveUser (roomID: string) (user: User) =
@@ -49,6 +51,7 @@ let resolveChannelString (channel: string) =
     match channel with
     | ResolveChannelString name -> name
 
+//#nowarn "0052"
 let (|SubVin|SubLoose|Streamer|Moder|Nill|) user =
     let random =
         Random(int DateTime.Now.Ticks).Next(0, 99)

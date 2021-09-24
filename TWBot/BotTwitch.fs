@@ -1,4 +1,4 @@
-﻿module TWBot.Bot
+﻿module TWBot.BotTwitch
 
 open TWBot
 
@@ -665,10 +665,10 @@ module private Commands =
 
     let uptime (ctx: MessageContext) =
         if APITwitch.Requests.checkOnline ctx.MessageRead.Channel then
-            APITwitch.Requests.getStreams ctx.MessageRead.Channel
+            APITwitch.Requests.getStream ctx.MessageRead.Channel
             |> APITwitch.deserializeRespons<GetStreams>
             |> function
-            | Ok (data) ->
+            | Ok data ->
                 let sinceTime =
                     DateTime.Now
                     - DateTime.Parse(data.data.[0].started_at)

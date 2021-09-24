@@ -99,7 +99,7 @@ module Requests =
             Error
             <| sprintf "searchChannels WebException Err:%s P: %s" eX.Message channel.String
 
-    let getStreams (channel: Channels) =
+    let getStream (channel: Channels) =
         Logger.Log.TraceInf
         <| sprintf "Start getStreams api request for %s" channel.String
 
@@ -118,6 +118,28 @@ module Requests =
 
             Error
             <| sprintf "getStreams WebException Err:%s P: %s" eX.Message channel.String
+            
+    let getStreams (channels: Channels list) =
+        Logger.Log.TraceInf
+        <| sprintf "Start getStreams api request for %A" channels
+
+        try
+            let url = sprintf @"%sstreams" _APIurl
+            Logger.Log.TraceDeb <| sprintf "getStreams %s" url
+
+            Http.RequestString(url, httpMethod = "GET",
+                               query =  [ for channel in channels -> "user_login", channel.String ],
+                               headers = _headers ())
+            |> Ok
+        with :? System.Net.WebException as eX ->
+            Logger.Log.TraceErr
+            <| sprintf "getStreams WebException Err:%s P: %A" eX.Message channels
+
+            Logger.Log.TraceExc
+            <| sprintf "getStreams WebException EX: %A" eX.StackTrace
+
+            Error
+            <| sprintf "getStreams WebException Err:%s P: %A" eX.Message channels      
 
     let getUserSubscribtion channelID userID =
         Logger.Log.TraceInf
@@ -172,7 +194,7 @@ module Requests =
             <| sprintf "getChatters WebException Err:%s P: %s" eX.Message channel.String
 
     let checkOnline channel =
-        getStreams channel
+        getStream channel
         |> deserializeRespons<GetStreams>
         |> function
         | Ok (ok) ->

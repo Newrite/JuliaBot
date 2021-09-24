@@ -43,6 +43,8 @@ type Channels =
     | Cryo
     | Madelinqa
     | Kaelia
+    | Chu8
+    | Zein
     member self.String =
         match self with
         | Reflyq -> "reflyq"
@@ -58,6 +60,8 @@ type Channels =
         | Cryo -> "cryo_0"
         | Madelinqa -> "madelineqt"
         | Kaelia -> "kaelia_kael"
+        | Chu8 -> "chu8"
+        | Zein -> "crtzein"
 
     static member ToList =
         [ Reflyq
@@ -72,7 +76,26 @@ type Channels =
           Lievrefr
           Cryo
           Madelinqa
-          Kaelia ]
+          Kaelia
+          Chu8
+          Zein ]
+        
+    static member ToStringList =
+        [ "reflyq"
+          "newr1te"
+          "xartasovplay"
+          "xandr_sh"
+          "markus242"
+          "felicia_nought"
+          "desmond_hh"
+          "lebelius"
+          "enemycbc"
+          "lievrefru"
+          "cryo_0"
+          "madelineqt"
+          "kaelia_kael"
+          "chu8"
+          "crtzein" ]
 
 type StatusUser =
     | Broadcaster
@@ -105,34 +128,43 @@ type MessageRead =
       //Command: Option<Lazy<ChannelCommand>>
       RewardCode: Option<string> }
 
+[<NoComparison>]
 type ReaderWriter =
     { Reader: System.IO.StreamReader
       Writer: System.IO.StreamWriter }
 
+[<NoComparison>]
 type MessageWrite =
     { Channel: Channels
       Message: string
       Writer: System.IO.StreamWriter }
 
+[<NoComparison>]
 type MessageContext =
     { MessageRead: MessageRead
       ReaderWriter: ReaderWriter }
 
+[<NoEquality>]
+[<NoComparison>]
 type CommandList =
     { cmdName: string list
       Command: MessageContext -> string
       Channel: ChannelOption
       Ban: Channels list }
 
+[<NoEquality>]
+[<NoComparison>]
 type RewardList =
     { RewardCode: string
       Command: MessageContext -> string
       Channel: Channels }
 
+[<NoComparison>]
 type CutDownAnswer =
     { AnswFunc: Lazy<unit>
       Answer: string }
 
+[<NoComparison>]
 type Bot = Bot of System.Net.Sockets.TcpClient
 
 //Кэш
@@ -234,6 +266,7 @@ type GetStreamsData =
       user_login: string
       user_name: string
       game_id: string
+      game_name: string
       ``type``: string
       title: string
       viewer_count: uint

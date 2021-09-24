@@ -2,22 +2,32 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
-        <RuntimeIdentifier>linux-arm</RuntimeIdentifier>
+      <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <!--<PublishTrimmed>true</PublishTrimmed>
         <PublishReadyToRun>false</PublishReadyToRun>-->
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <WarningLevel>4</WarningLevel>
+      <WarningLevel>5</WarningLevel>
       <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <WarningLevel>4</WarningLevel>
+      <WarningLevel>5</WarningLevel>
       <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <PlatformTarget>x64</PlatformTarget>
+      <OtherFlags>--consolecolors --checked+ --sig:Signature.fsi --nowarn:0052</OtherFlags>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+      <PlatformTarget>x64</PlatformTarget>
+      <OtherFlags>--consolecolors --checked+ --sig:Signature.fsi --nowarn:0052</OtherFlags>
     </PropertyGroup>
 
     <ItemGroup>
@@ -28,15 +38,22 @@
         <Compile Include="DataBase.fs" />
         <Compile Include="APITwitch.fs" />
         <Compile Include="Cache.fs" />
-        <Compile Include="Bot.fs" />
+        <Compile Include="BotTwitch.fs" />
+        <Compile Include="BotTG.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="FSharp.Core.Fluent" Version="2.0.1" />
-      <PackageReference Include="FSharp.Data" Version="4.1.0" />
-      <PackageReference Include="FSharp.Json" Version="0.4.0" />
-      <PackageReference Include="System.Data.SQLite" Version="1.0.113.7" />
+      <PackageReference Include="FSharp.Core.Fluent" Version="3.0.1" />
+      <PackageReference Include="FSharp.Data" Version="4.2.2" />
+      <PackageReference Include="FSharp.Json" Version="0.4.1" />
+      <PackageReference Include="Funogram" Version="2.0.3" />
+      <PackageReference Include="Funogram.Telegram" Version="4.4.2.3" />
+      <PackageReference Include="System.Data.SQLite" Version="1.0.115" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Update="FSharp.Core" Version="5.0.3-beta.21352.5" />
     </ItemGroup>
 
 </Project>
